@@ -1,0 +1,23 @@
+---
+description: UniNode Ops Console product context and implementation priorities
+alwaysApply: true
+---
+
+# UniNode Product Context
+
+UniNode Ops Console is a local-first visual operations console for a complex personal/small-team network. It covers:
+
+- Global access paths: ASUS/FreeSky, transparent gateway, VPS VLESS/HY2 subscription, Clash/mihomo, Tailscale Exit Node.
+- Device domains: Huawei router, ASUS router, miniPC backup-gateway, EpixNAS/RPi, Contabo VPS, Tencent Cloud, Mac/Windows/Linux/iPhone/iPad/Android.
+- Services: NAS, Obsidian sync, Tailscale, sing-box, mihomo/clash-meta, OpenClaw, Hermes, Cursor automation.
+- Product style: visual dashboard + topology + automation jobs + evidence + reports + human handoff.
+
+Use `Docs/03_PRD_本地部署控制台产品.md` as the product source of truth and `Docs/04_开发实施任务细分解构.md` as the execution plan source.
+
+Implementation priorities:
+
+1. MVP first: visual readonly console, facts import, evidence scan, safety scan, Cursor automation task package, reports.
+2. Treat offline devices as normal unless policy says they must be online; use `needs_human_power_on` instead of declaring architecture failure.
+3. Do not automate production network changes by default. Prefer dry-run, approval, rollback, and evidence.
+4. Never treat template evidence, empty evidence, or `insufficient_data` as a passed gate.
+5. Keep modules small and testable: config, devices, services, evidence, gates, automations, agents, reports, security, topology.

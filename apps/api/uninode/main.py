@@ -1,0 +1,37 @@
+from pathlib import Path
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from uninode.auth import create_auth_router
+from uninode.console import router as console_router
+from uninode.storage import DEFAULT_DATABASE_PATH, initialize_database
+
+
+def create_app(database_path: Path = DEFAULT_DATABASE_PATH) -> FastAPI:
+    initialize_database(database_path)
+    app = FastAPI(
+        title="UniNode Ops Console API",
+        version="0.1.0",
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://127.0.0.1:43110", "http://localhost:43110"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    @app.get("/healthz")
+    def healthz() -> dict[str, str]:
+        return {
+            "status": "ok",
+            "service": "uninode-api",
+        }
+
+    app.include_router(create_auth_router(database_path))
+    app.include_router(console_router)
+    return app
+
+
+app = create_app()

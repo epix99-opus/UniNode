@@ -1,0 +1,35 @@
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.pnpm-store/
+*.egg-info/
+*.tsbuildinfo
+
+# UniNode runtime state
+data/
+*.sqlite
+*.sqlite3
+*.db
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.mobileconfig
+*.ovpn
+
+# OS/editor noise
+.DS_Store
+*.log

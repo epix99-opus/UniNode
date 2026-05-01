@@ -1,0 +1,16 @@
+---
+description: Safety rules for network automation, agents, secrets, and evidence
+alwaysApply: true
+---
+
+# Safety And Automation Boundaries
+
+UniNode works near real network infrastructure. Default to safe operations.
+
+- Default mode is readonly or dry-run. Do not run commands that change routers, VPS, OpenWrt, Armbian, Tailscale, firewall, routes, DNS, subscriptions, or NAS services without explicit user approval.
+- Before any executable plan, define: target device, blast radius, precheck, command, expected result, rollback, verification evidence.
+- Never run destructive commands, force pushes, hard resets, credential dumps, or production config writes unless the user explicitly approves that exact action.
+- Secrets must not appear in reports, logs, screenshots, Agent context, commits, or prompts. Redact UUIDs, private keys, passwords, auth keys, subscription URLs, SSH credentials, and cert material.
+- If a device is offline, distinguish `expected_offline`, `temporary_power_off`, `needs_human_power_on`, and `unexpected_offline`.
+- Agent automation must have `allowed_paths`, `denied_actions`, expected output schema, and redaction before execution.
+- Evidence gates are strict: invalid JSON, all-NA bench, template-only CSV, empty SHA-256 fingerprint, missing live subscription hits, or mobile `insufficient_data` are blockers.

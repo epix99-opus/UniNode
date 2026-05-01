@@ -1,0 +1,11 @@
+{
+  "name": "uninode",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @uninode/web dev",
+    "dev:web": "pnpm --filter @uninode/web dev",
+    "dev:api": "cd apps/api && uvicorn uninode.main:app --reload",
+    "build:web": "pnpm --filter @uninode/web build",
+    "test:api": "cd apps/api && python -m pytest"
+  }
+}

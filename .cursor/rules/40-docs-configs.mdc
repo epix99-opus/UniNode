@@ -1,0 +1,15 @@
+---
+description: Documentation and YAML config standards for UniNode
+globs: "{Docs/**/*.md,configs/**/*.yaml,configs/**/*.yml,.cursor/rules/*.mdc}"
+alwaysApply: false
+---
+
+# Docs And Config Standards
+
+- Keep PRD and implementation docs actionable: each feature needs scope, data model, command/API/UI behavior, gate, rollback, and test expectation.
+- Avoid vague placeholders such as TBD, later, proper handling, or appropriate validation.
+- Config files should be human-editable YAML with stable IDs and explicit defaults.
+- Do not store secrets in config. Reference a secret name or local secret provider instead.
+- When documenting network behavior, distinguish target architecture, current fact, temporary offline, and evidence gap.
+- Every operational claim should cite a path or generated evidence ID.
+- Update docs when changing status names, gate behavior, automation modes, or directory conventions.

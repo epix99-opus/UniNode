@@ -1,0 +1,48 @@
+version: 1
+mode: local_first
+workspace: /Users/epix/Dev/UniNode
+source_root: /Users/epix/Dev/TraeDev/contabo
+audit_root: /Users/epix/Dev/TraeDev/contabo/network-audit-2026Q2
+
+api:
+  host: 127.0.0.1
+  port: 8000
+
+ui:
+  host: 127.0.0.1
+  port: 43110
+
+storage:
+  runtime_dir: data
+  database_path: data/uninode.db
+  evidence_dir: data/evidence
+  runs_dir: data/runs
+  reports_dir: data/reports
+
+execution:
+  default_mode: dry_run
+  require_approval_for_network_changes: true
+  allow_auto_readonly_checks: true
+  allowed_modes:
+    - readonly
+    - dry_run
+    - manual_handoff
+    - approved_execute
+
+agent_automation:
+  cursor:
+    enabled: true
+    default_mode: readonly
+  openclaw:
+    enabled: false
+  hermes:
+    enabled: false
+
+security:
+  redact_secrets: true
+  block_publish_on_secret_findings: true
+  secret_values_allowed_in_reports: false
+
+offline_policy:
+  default_offline_state: needs_human_power_on
+  treat_expected_offline_as_failure: false

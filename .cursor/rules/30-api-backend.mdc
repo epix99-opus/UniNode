@@ -1,0 +1,17 @@
+---
+description: Backend patterns for the UniNode API and local runner
+globs: apps/api/**/*.py
+alwaysApply: false
+---
+
+# Backend API Patterns
+
+Use a modular FastAPI backend with explicit domain boundaries.
+
+- Suggested packages: `config`, `devices`, `services`, `evidence`, `gates`, `automations`, `agents`, `reports`, `security`, `topology`, `storage`.
+- API responses should use typed Pydantic models; do not return raw script output as business state.
+- Long-running checks and jobs must emit structured events with timestamp, level, module, message, evidence path, and next action.
+- Local execution must enforce mode: `readonly`, `dry_run`, `manual_handoff`, `approved_execute`.
+- All script adapters need timeout, captured stdout/stderr, exit code, redaction, and cancellation.
+- Parsers should classify evidence as `valid`, `invalid`, `template_only`, `missing`, `stale`, or `requires_human_collection`.
+- Tests should use fixture copies of audit files and must cover invalid/empty/template evidence.

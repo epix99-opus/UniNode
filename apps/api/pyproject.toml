@@ -1,0 +1,20 @@
+[project]
+name = "uninode-api"
+version = "0.1.0"
+description = "Local-first UniNode Ops Console API"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi",
+  "pydantic",
+  "uvicorn[standard]"
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx",
+  "pytest"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

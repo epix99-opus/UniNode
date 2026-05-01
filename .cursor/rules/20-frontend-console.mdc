@@ -1,0 +1,17 @@
+---
+description: Frontend patterns for the UniNode visual console
+globs: apps/web/**/*.{ts,tsx,css,scss}
+alwaysApply: false
+---
+
+# Frontend Console Patterns
+
+Build the UI as a calm operations console, not a generic admin template.
+
+- Primary screens: Dashboard, Topology, Devices, Services, Automation, Incidents, Evidence, Reports, Settings.
+- Every status badge must explain next action: `healthy`, `degraded`, `evidence_gap`, `needs_human_power_on`, `blocked`, `rollback_required`.
+- Show physical topology and logical topology separately; do not hide offline nodes.
+- Use typed API clients and explicit loading/error/empty states.
+- Components should be small: page components compose domain widgets; widgets receive typed view models.
+- Prefer accessible colors and text labels over color-only status.
+- Avoid optimistic success for automation jobs; wait for gate/evidence result.
