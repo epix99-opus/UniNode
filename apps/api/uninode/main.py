@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from uninode.agents import create_agents_router
 from uninode.auth import create_auth_router
 from uninode.config_status import DEFAULT_CONFIG_PATH, create_config_router
 from uninode.console import router as console_router
@@ -55,6 +56,7 @@ def create_app(
     app.include_router(create_dashboard_router(config_path, devices_config_path, services_config_path))
     app.include_router(create_gates_router(config_path, devices_config_path))
     app.include_router(create_jobs_router(config_path, devices_config_path, automations_config_path))
+    app.include_router(create_agents_router(config_path, devices_config_path, automations_config_path))
     app.include_router(console_router)
     return app
 

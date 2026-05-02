@@ -159,6 +159,24 @@ type DryRunResult = {
   human_actions: string[];
 };
 
+type AgentTask = {
+  provider: string;
+  job_id: string;
+  title: string;
+  mode: string;
+  prompt: string;
+  allowed_paths: string[];
+  denied_actions: string[];
+  expected_output_schema: Record<string, string>;
+  evidence_required: string[];
+  evidence_paths: string[];
+  human_actions: string[];
+  redaction: {
+    applied: boolean;
+    policy: string;
+  };
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -217,7 +235,9 @@ const copy = {
     overallStatus: "整体状态",
     automationJobs: "自动化任务",
     runDry: "生成 dry-run",
+    handoffCursor: "交给 Cursor 检查",
     dryRunResult: "Dry-run 结果",
+    agentTask: "Cursor 任务包",
     executed: "已执行",
     nodes: "节点",
     edges: "连接",
@@ -314,7 +334,9 @@ const copy = {
     overallStatus: "Overall status",
     automationJobs: "Automation Jobs",
     runDry: "Generate dry-run",
+    handoffCursor: "Hand off to Cursor",
     dryRunResult: "Dry-run result",
+    agentTask: "Cursor Task Package",
     executed: "Executed",
     nodes: "Nodes",
     edges: "Edges",
@@ -445,6 +467,7 @@ function App() {
   const [dashboard, setDashboard] = useState<DashboardSummary>(defaultDashboard);
   const [jobs, setJobs] = useState<AutomationJob[]>([]);
   const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null);
+  const [agentTask, setAgentTask] = useState<AgentTask | null>(null);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -554,6 +577,17 @@ function App() {
     const response = await fetch(`${apiBase}/api/jobs/${jobId}/run-dry`, { method: "POST" });
     if (response.ok) {
       setDryRunResult((await response.json()) as DryRunResult);
+    }
+  }
+
+  async function createCursorTask(jobId: string) {
+    const response = await fetch(`${apiBase}/api/agents/cursor/tasks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job_id: jobId }),
+    });
+    if (response.ok) {
+      setAgentTask((await response.json()) as AgentTask);
     }
   }
 
@@ -876,6 +910,9 @@ function App() {
                     <button type="button" onClick={() => runDryJob(job.id)}>
                       {t.runDry}
                     </button>
+                    <button type="button" onClick={() => createCursorTask(job.id)}>
+                      {t.handoffCursor}
+                    </button>
                   </article>
                 ))}
               </div>
@@ -892,6 +929,19 @@ function App() {
                       {step.order}. {step.command}: {step.description}
                     </small>
                   ))}
+                </article>
+              )}
+              {agentTask && (
+                <article className="dry-run-card">
+                  <span>{t.agentTask}</span>
+                  <strong>
+                    {agentTask.provider} · {agentTask.mode}
+                  </strong>
+                  <p>{agentTask.title}</p>
+                  <small>allowed: {agentTask.allowed_paths.join(", ")}</small>
+                  <small>denied: {agentTask.denied_actions.join(", ")}</small>
+                  <small>human: {agentTask.human_actions.join(", ") || "-"}</small>
+                  <small>redaction: {String(agentTask.redaction.applied)}</small>
                 </article>
               )}
             </div>
