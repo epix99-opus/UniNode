@@ -256,6 +256,28 @@ type AgentRegistry = {
   };
 };
 
+type SchedulerConfig = {
+  schedules: Array<{
+    id: string;
+    label: string;
+    frequency: string;
+    job_id: string | null;
+    report_type: string | null;
+    observation_window_hours: number;
+  }>;
+  notification_hook: string;
+};
+
+type ScheduleTickResult = {
+  schedule_id: string;
+  status: string;
+  executed: boolean;
+  consecutive_failures: number;
+  severity: string;
+  notification_required: boolean;
+  next_action: string;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -334,6 +356,8 @@ const copy = {
     lastSync: "最近同步",
     incidentCenter: "事件中心",
     agentRegistry: "Agent 注册表",
+    scheduler: "持续调度",
+    tickDry: "Dry-run tick",
     capabilities: "能力",
     handoffModes: "交接模式",
     createIncident: "创建事件",
@@ -454,6 +478,8 @@ const copy = {
     lastSync: "Last sync",
     incidentCenter: "Incident Center",
     agentRegistry: "Agent Registry",
+    scheduler: "Scheduler",
+    tickDry: "Dry-run tick",
     capabilities: "Capabilities",
     handoffModes: "Handoff modes",
     createIncident: "Create incident",
@@ -600,6 +626,11 @@ const defaultSyncStatus: SyncStatus = {
   next_action: "Choose a sync service.",
 };
 
+const defaultScheduler: SchedulerConfig = {
+  schedules: [],
+  notification_hook: "local_report_only",
+};
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem("uninode.language") as Language | null) ?? "zh";
@@ -624,6 +655,8 @@ function App() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(defaultSyncStatus);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [agentRegistry, setAgentRegistry] = useState<AgentRegistry | null>(null);
+  const [scheduler, setScheduler] = useState<SchedulerConfig>(defaultScheduler);
+  const [scheduleTick, setScheduleTick] = useState<ScheduleTickResult | null>(null);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -700,6 +733,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: AgentRegistry) => setAgentRegistry(payload))
       .catch(() => setAgentRegistry(null));
+    fetch(`${apiBase}/api/scheduler`)
+      .then((response) => response.json())
+      .then((payload: SchedulerConfig) => setScheduler(payload))
+      .catch(() => setScheduler(defaultScheduler));
   }, []);
 
   useEffect(() => {
@@ -767,6 +804,17 @@ function App() {
     const response = await fetch(`${apiBase}/api/reports/${reportType}`, { method: "POST" });
     if (response.ok) {
       setReportResult((await response.json()) as ReportResult);
+    }
+  }
+
+  async function tickScheduleDry(scheduleId: string, status = "failed") {
+    const response = await fetch(`${apiBase}/api/scheduler/${scheduleId}/tick-dry`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (response.ok) {
+      setScheduleTick((await response.json()) as ScheduleTickResult);
     }
   }
 
@@ -1286,6 +1334,40 @@ function App() {
                   </small>
                 </article>
               ))}
+            </div>
+          )}
+          {activePage === "automation" && (
+            <div className="reports-board" aria-label={t.scheduler}>
+              <article className="dry-run-card">
+                <span>{t.scheduler}</span>
+                <strong>{scheduler.notification_hook}</strong>
+                <small>{t.nextAction}: observation before escalation</small>
+              </article>
+              {scheduler.schedules.map((schedule) => (
+                <article className="job-card" key={schedule.id}>
+                  <strong>
+                    {schedule.label} · {schedule.frequency}
+                  </strong>
+                  <p>{schedule.job_id ?? schedule.report_type ?? "-"}</p>
+                  <small>observation: {schedule.observation_window_hours}h</small>
+                  <button type="button" onClick={() => tickScheduleDry(schedule.id)}>
+                    {t.tickDry}
+                  </button>
+                </article>
+              ))}
+              {scheduleTick && (
+                <article className="dry-run-card">
+                  <span>{t.tickDry}</span>
+                  <strong>
+                    {scheduleTick.schedule_id} · {scheduleTick.severity}
+                  </strong>
+                  <p>
+                    failures: {scheduleTick.consecutive_failures} · notify:{" "}
+                    {String(scheduleTick.notification_required)}
+                  </p>
+                  <small>{scheduleTick.next_action}</small>
+                </article>
+              )}
             </div>
           )}
           <div className="action-row">

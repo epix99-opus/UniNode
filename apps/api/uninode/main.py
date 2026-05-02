@@ -17,6 +17,7 @@ from uninode.incidents import create_incidents_router
 from uninode.jobs import DEFAULT_AUTOMATIONS_CONFIG_PATH, create_jobs_router
 from uninode.mihomo import DEFAULT_MIHOMO_CONFIG_PATH, create_mihomo_router
 from uninode.reports import create_reports_router
+from uninode.scheduler import DEFAULT_SCHEDULER_CONFIG_PATH, create_scheduler_router
 from uninode.security import create_security_router
 from uninode.services import DEFAULT_SERVICES_CONFIG_PATH, create_services_router
 from uninode.storage import DEFAULT_DATABASE_PATH, initialize_database
@@ -37,6 +38,7 @@ def create_app(
     mihomo_config_path: Path = DEFAULT_MIHOMO_CONFIG_PATH,
     sync_config_path: Path = DEFAULT_SYNC_CONFIG_PATH,
     agent_registry_config_path: Path = DEFAULT_AGENT_REGISTRY_CONFIG_PATH,
+    scheduler_config_path: Path = DEFAULT_SCHEDULER_CONFIG_PATH,
 ) -> FastAPI:
     initialize_database(database_path)
     app = FastAPI(
@@ -76,6 +78,7 @@ def create_app(
     app.include_router(create_sync_router(sync_config_path))
     app.include_router(create_incidents_router())
     app.include_router(create_agent_registry_router(agent_registry_config_path))
+    app.include_router(create_scheduler_router(scheduler_config_path))
     app.include_router(console_router)
     return app
 

@@ -1,0 +1,18 @@
+state_path: data/scheduler/state.json
+notification_hook: local_report_only
+schedules:
+  - id: daily_device_check
+    label: Daily device check
+    frequency: daily
+    job_id: check_global_access
+    observation_window_hours: 24
+  - id: weekly_report
+    label: Weekly operations report
+    frequency: weekly
+    report_type: current_ops_report
+    observation_window_hours: 168
+  - id: observation_checkpoint
+    label: 24h observation checkpoint
+    frequency: daily
+    job_id: scan_security
+    observation_window_hours: 24
