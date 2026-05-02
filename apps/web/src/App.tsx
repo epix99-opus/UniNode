@@ -177,6 +177,13 @@ type AgentTask = {
   };
 };
 
+type ReportResult = {
+  report_type: string;
+  path: string;
+  content: string;
+  redaction_applied: boolean;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -238,6 +245,8 @@ const copy = {
     handoffCursor: "交给 Cursor 检查",
     dryRunResult: "Dry-run 结果",
     agentTask: "Cursor 任务包",
+    generateReport: "生成报告",
+    reportResult: "报告结果",
     executed: "已执行",
     nodes: "节点",
     edges: "连接",
@@ -337,6 +346,8 @@ const copy = {
     handoffCursor: "Hand off to Cursor",
     dryRunResult: "Dry-run result",
     agentTask: "Cursor Task Package",
+    generateReport: "Generate report",
+    reportResult: "Report result",
     executed: "Executed",
     nodes: "Nodes",
     edges: "Edges",
@@ -468,6 +479,7 @@ function App() {
   const [jobs, setJobs] = useState<AutomationJob[]>([]);
   const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null);
   const [agentTask, setAgentTask] = useState<AgentTask | null>(null);
+  const [reportResult, setReportResult] = useState<ReportResult | null>(null);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -588,6 +600,13 @@ function App() {
     });
     if (response.ok) {
       setAgentTask((await response.json()) as AgentTask);
+    }
+  }
+
+  async function generateReport(reportType: string) {
+    const response = await fetch(`${apiBase}/api/reports/${reportType}`, { method: "POST" });
+    if (response.ok) {
+      setReportResult((await response.json()) as ReportResult);
     }
   }
 
@@ -942,6 +961,29 @@ function App() {
                   <small>denied: {agentTask.denied_actions.join(", ")}</small>
                   <small>human: {agentTask.human_actions.join(", ") || "-"}</small>
                   <small>redaction: {String(agentTask.redaction.applied)}</small>
+                </article>
+              )}
+            </div>
+          )}
+          {activePage === "reports" && (
+            <div className="reports-board" aria-label={t.reportResult}>
+              {[
+                "current_ops_report",
+                "evidence_gap_report",
+                "security_report",
+                "agent_context",
+                "incident_report",
+              ].map((reportType) => (
+                <button key={reportType} type="button" onClick={() => generateReport(reportType)}>
+                  {t.generateReport}: {reportType}
+                </button>
+              ))}
+              {reportResult && (
+                <article className="dry-run-card">
+                  <span>{t.reportResult}</span>
+                  <strong>{reportResult.report_type}</strong>
+                  <p>{reportResult.path}</p>
+                  <small>redaction: {String(reportResult.redaction_applied)}</small>
                 </article>
               )}
             </div>

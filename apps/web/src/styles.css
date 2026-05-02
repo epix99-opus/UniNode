@@ -681,6 +681,17 @@ button {
   margin-top: 22px;
 }
 
+.reports-board {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.reports-board .dry-run-card {
+  flex: 1 1 100%;
+}
+
 .job-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
