@@ -199,6 +199,17 @@ type TailscaleStatus = {
   }>;
 };
 
+type MihomoStatus = {
+  readonly: boolean;
+  controller_status: string;
+  version: string | null;
+  proxy_groups: Array<{ name: string; now: string; type: string }>;
+  subscription_summary: Record<string, string>;
+  rule_hits_status: string;
+  collection_task_required: boolean;
+  next_action: string;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -267,6 +278,10 @@ const copy = {
     configGap: "配置缺口",
     exitNode: "Exit Node",
     keyStatus: "Key 状态",
+    mihomoStatus: "Mihomo 状态",
+    controllerStatus: "Controller 状态",
+    ruleHits: "规则命中",
+    collectionTask: "采集任务",
     executed: "已执行",
     nodes: "节点",
     edges: "连接",
@@ -373,6 +388,10 @@ const copy = {
     configGap: "Config gap",
     exitNode: "Exit Node",
     keyStatus: "Key status",
+    mihomoStatus: "Mihomo Status",
+    controllerStatus: "Controller status",
+    ruleHits: "Rule hits",
+    collectionTask: "Collection task",
     executed: "Executed",
     nodes: "Nodes",
     edges: "Edges",
@@ -494,6 +513,17 @@ const defaultTailscaleStatus: TailscaleStatus = {
   nodes: [],
 };
 
+const defaultMihomoStatus: MihomoStatus = {
+  readonly: true,
+  controller_status: "unreachable_or_missing_snapshot",
+  version: null,
+  proxy_groups: [],
+  subscription_summary: {},
+  rule_hits_status: "missing",
+  collection_task_required: true,
+  next_action: "Controller snapshot missing.",
+};
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem("uninode.language") as Language | null) ?? "zh";
@@ -514,6 +544,7 @@ function App() {
   const [agentTask, setAgentTask] = useState<AgentTask | null>(null);
   const [reportResult, setReportResult] = useState<ReportResult | null>(null);
   const [tailscaleStatus, setTailscaleStatus] = useState<TailscaleStatus>(defaultTailscaleStatus);
+  const [mihomoStatus, setMihomoStatus] = useState<MihomoStatus>(defaultMihomoStatus);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -578,6 +609,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: TailscaleStatus) => setTailscaleStatus(payload))
       .catch(() => setTailscaleStatus(defaultTailscaleStatus));
+    fetch(`${apiBase}/api/mihomo/status`)
+      .then((response) => response.json())
+      .then((payload: MihomoStatus) => setMihomoStatus(payload))
+      .catch(() => setMihomoStatus(defaultMihomoStatus));
   }, []);
 
   useEffect(() => {
@@ -913,6 +948,24 @@ function App() {
                   <small>
                     {t.keyStatus}: {node.key_status}
                   </small>
+                </article>
+              ))}
+              <article className={mihomoStatus.collection_task_required ? "dashboard-card evidence_gap" : "dashboard-card"}>
+                <span>{t.mihomoStatus}</span>
+                <strong>
+                  {t.controllerStatus}: {mihomoStatus.controller_status}
+                </strong>
+                <p>
+                  {t.ruleHits}: {mihomoStatus.rule_hits_status} · {t.collectionTask}:{" "}
+                  {String(mihomoStatus.collection_task_required)}
+                </p>
+                <small>{mihomoStatus.next_action}</small>
+              </article>
+              {mihomoStatus.proxy_groups.map((group) => (
+                <article className="topology-node" key={group.name}>
+                  <strong>{group.name}</strong>
+                  <span>{group.type}</span>
+                  <p>{group.now || "-"}</p>
                 </article>
               ))}
             </div>
