@@ -9,6 +9,7 @@ from uninode.console import router as console_router
 from uninode.dashboard import create_dashboard_router
 from uninode.devices import DEFAULT_DEVICES_CONFIG_PATH, create_devices_router
 from uninode.evidence import create_evidence_router
+from uninode.gates import create_gates_router
 from uninode.security import create_security_router
 from uninode.services import DEFAULT_SERVICES_CONFIG_PATH, create_services_router
 from uninode.storage import DEFAULT_DATABASE_PATH, initialize_database
@@ -50,6 +51,7 @@ def create_app(
     app.include_router(create_security_router(config_path))
     app.include_router(create_topology_router(topology_config_path))
     app.include_router(create_dashboard_router(config_path, devices_config_path, services_config_path))
+    app.include_router(create_gates_router(config_path, devices_config_path))
     app.include_router(console_router)
     return app
 

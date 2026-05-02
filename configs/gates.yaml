@@ -1,0 +1,15 @@
+gates:
+  - id: no_invalid_json
+    label: No invalid JSON evidence
+  - id: no_na_fields
+    label: No NA fields in bench evidence
+  - id: mobile_has_valid_samples
+    label: Mobile compare has valid samples
+  - id: subscription_live_hits_present
+    label: Subscription live hits are present
+  - id: fingerprint_non_empty
+    label: Fingerprint is non-empty
+  - id: secret_scan_pass
+    label: Secret scan passes
+  - id: device_offline_policy
+    label: Device offline policy
