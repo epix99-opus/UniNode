@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from uninode.agent_registry import DEFAULT_AGENT_REGISTRY_CONFIG_PATH, create_agent_registry_router
 from uninode.agents import create_agents_router
 from uninode.auth import create_auth_router
 from uninode.config_status import DEFAULT_CONFIG_PATH, create_config_router
@@ -35,6 +36,7 @@ def create_app(
     tailscale_config_path: Path = DEFAULT_TAILSCALE_CONFIG_PATH,
     mihomo_config_path: Path = DEFAULT_MIHOMO_CONFIG_PATH,
     sync_config_path: Path = DEFAULT_SYNC_CONFIG_PATH,
+    agent_registry_config_path: Path = DEFAULT_AGENT_REGISTRY_CONFIG_PATH,
 ) -> FastAPI:
     initialize_database(database_path)
     app = FastAPI(
@@ -73,6 +75,7 @@ def create_app(
     app.include_router(create_mihomo_router(mihomo_config_path))
     app.include_router(create_sync_router(sync_config_path))
     app.include_router(create_incidents_router())
+    app.include_router(create_agent_registry_router(agent_registry_config_path))
     app.include_router(console_router)
     return app
 

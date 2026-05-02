@@ -1,0 +1,12 @@
+agents:
+  - id: openclaw
+    name: OpenClaw
+    endpoint: not_registered
+    health_snapshot_path: data/evidence/agents/openclaw-health.json
+    capabilities: [readonly_diagnostics, evidence_review]
+  - id: hermes
+    name: Hermes
+    endpoint: not_registered
+    health_snapshot_path: data/evidence/agents/hermes-health.json
+    capabilities: [report_review, human_handoff]
+archive_dir: data/evidence/agents/archive

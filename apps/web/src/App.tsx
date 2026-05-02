@@ -240,6 +240,22 @@ type Incident = {
   blocked: boolean;
 };
 
+type AgentRegistry = {
+  agents: Array<{
+    id: string;
+    name: string;
+    endpoint: string;
+    status: string;
+    capabilities: string[];
+    health_snapshot_path: string;
+  }>;
+  task_handoff: {
+    allowed_modes: string[];
+    denied_actions: string[];
+    context_sources: string[];
+  };
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -317,6 +333,9 @@ const copy = {
     backupMarker: "备份点",
     lastSync: "最近同步",
     incidentCenter: "事件中心",
+    agentRegistry: "Agent 注册表",
+    capabilities: "能力",
+    handoffModes: "交接模式",
     createIncident: "创建事件",
     closeIncident: "关闭",
     executed: "已执行",
@@ -434,6 +453,9 @@ const copy = {
     backupMarker: "Backup marker",
     lastSync: "Last sync",
     incidentCenter: "Incident Center",
+    agentRegistry: "Agent Registry",
+    capabilities: "Capabilities",
+    handoffModes: "Handoff modes",
     createIncident: "Create incident",
     closeIncident: "Close",
     executed: "Executed",
@@ -601,6 +623,7 @@ function App() {
   const [mihomoStatus, setMihomoStatus] = useState<MihomoStatus>(defaultMihomoStatus);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(defaultSyncStatus);
   const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [agentRegistry, setAgentRegistry] = useState<AgentRegistry | null>(null);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -673,6 +696,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: SyncStatus) => setSyncStatus(payload))
       .catch(() => setSyncStatus(defaultSyncStatus));
+    fetch(`${apiBase}/api/agents/registry`)
+      .then((response) => response.json())
+      .then((payload: AgentRegistry) => setAgentRegistry(payload))
+      .catch(() => setAgentRegistry(null));
   }, []);
 
   useEffect(() => {
@@ -1235,6 +1262,28 @@ function App() {
                   <button type="button" onClick={() => closeIncident(incident.id)}>
                     {t.closeIncident}
                   </button>
+                </article>
+              ))}
+            </div>
+          )}
+          {activePage === "automation" && agentRegistry && (
+            <div className="reports-board" aria-label={t.agentRegistry}>
+              <article className="dry-run-card">
+                <span>{t.agentRegistry}</span>
+                <strong>
+                  {t.handoffModes}: {agentRegistry.task_handoff.allowed_modes.join(", ")}
+                </strong>
+                <small>denied: {agentRegistry.task_handoff.denied_actions.join(", ")}</small>
+              </article>
+              {agentRegistry.agents.map((agent) => (
+                <article className="job-card" key={agent.id}>
+                  <strong>
+                    {agent.name} · {agent.status}
+                  </strong>
+                  <p>{agent.endpoint}</p>
+                  <small>
+                    {t.capabilities}: {agent.capabilities.join(", ") || "-"}
+                  </small>
                 </article>
               ))}
             </div>
