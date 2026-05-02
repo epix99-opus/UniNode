@@ -10,6 +10,7 @@ from uninode.console import router as console_router
 from uninode.dashboard import create_dashboard_router
 from uninode.devices import DEFAULT_DEVICES_CONFIG_PATH, create_devices_router
 from uninode.evidence import create_evidence_router
+from uninode.executor import DEFAULT_EXECUTOR_CONFIG_PATH, create_executor_router
 from uninode.gates import create_gates_router
 from uninode.jobs import DEFAULT_AUTOMATIONS_CONFIG_PATH, create_jobs_router
 from uninode.reports import create_reports_router
@@ -26,6 +27,7 @@ def create_app(
     services_config_path: Path = DEFAULT_SERVICES_CONFIG_PATH,
     topology_config_path: Path = DEFAULT_TOPOLOGY_CONFIG_PATH,
     automations_config_path: Path = DEFAULT_AUTOMATIONS_CONFIG_PATH,
+    executor_config_path: Path = DEFAULT_EXECUTOR_CONFIG_PATH,
 ) -> FastAPI:
     initialize_database(database_path)
     app = FastAPI(
@@ -59,6 +61,7 @@ def create_app(
     app.include_router(create_jobs_router(config_path, devices_config_path, automations_config_path))
     app.include_router(create_agents_router(config_path, devices_config_path, automations_config_path))
     app.include_router(create_reports_router(config_path, devices_config_path, services_config_path))
+    app.include_router(create_executor_router(executor_config_path))
     app.include_router(console_router)
     return app
 

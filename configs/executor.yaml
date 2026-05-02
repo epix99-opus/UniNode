@@ -1,0 +1,6 @@
+commands:
+  - id: bench_throughput
+    description: Readonly local throughput benchmark wrapper
+    command: [echo, "bench_throughput dry-run placeholder"]
+    mode: readonly
+    timeout_seconds: 10
