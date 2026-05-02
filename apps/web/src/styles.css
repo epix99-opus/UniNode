@@ -692,6 +692,13 @@ button {
   flex: 1 1 100%;
 }
 
+.tailscale-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
 .job-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -807,6 +814,7 @@ button {
   .path-row,
   .dashboard-cards,
   .topology-grid,
+  .tailscale-panel,
   .job-list,
   .device-list,
   .service-list,

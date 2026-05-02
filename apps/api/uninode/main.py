@@ -17,6 +17,7 @@ from uninode.reports import create_reports_router
 from uninode.security import create_security_router
 from uninode.services import DEFAULT_SERVICES_CONFIG_PATH, create_services_router
 from uninode.storage import DEFAULT_DATABASE_PATH, initialize_database
+from uninode.tailscale import DEFAULT_TAILSCALE_CONFIG_PATH, create_tailscale_router
 from uninode.topology import DEFAULT_TOPOLOGY_CONFIG_PATH, create_topology_router
 
 
@@ -28,6 +29,7 @@ def create_app(
     topology_config_path: Path = DEFAULT_TOPOLOGY_CONFIG_PATH,
     automations_config_path: Path = DEFAULT_AUTOMATIONS_CONFIG_PATH,
     executor_config_path: Path = DEFAULT_EXECUTOR_CONFIG_PATH,
+    tailscale_config_path: Path = DEFAULT_TAILSCALE_CONFIG_PATH,
 ) -> FastAPI:
     initialize_database(database_path)
     app = FastAPI(
@@ -62,6 +64,7 @@ def create_app(
     app.include_router(create_agents_router(config_path, devices_config_path, automations_config_path))
     app.include_router(create_reports_router(config_path, devices_config_path, services_config_path))
     app.include_router(create_executor_router(executor_config_path))
+    app.include_router(create_tailscale_router(tailscale_config_path))
     app.include_router(console_router)
     return app
 

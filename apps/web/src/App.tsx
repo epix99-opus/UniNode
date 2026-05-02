@@ -184,6 +184,21 @@ type ReportResult = {
   redaction_applied: boolean;
 };
 
+type TailscaleStatus = {
+  readonly: boolean;
+  token_status: string;
+  config_gap: boolean;
+  source: string;
+  nodes: Array<{
+    hostname: string;
+    online: boolean;
+    state: string;
+    tailscale_ips: string[];
+    exit_node: boolean;
+    key_status: string;
+  }>;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -247,6 +262,11 @@ const copy = {
     agentTask: "Cursor 任务包",
     generateReport: "生成报告",
     reportResult: "报告结果",
+    tailscaleStatus: "Tailscale 状态",
+    tokenStatus: "Token 状态",
+    configGap: "配置缺口",
+    exitNode: "Exit Node",
+    keyStatus: "Key 状态",
     executed: "已执行",
     nodes: "节点",
     edges: "连接",
@@ -348,6 +368,11 @@ const copy = {
     agentTask: "Cursor Task Package",
     generateReport: "Generate report",
     reportResult: "Report result",
+    tailscaleStatus: "Tailscale Status",
+    tokenStatus: "Token status",
+    configGap: "Config gap",
+    exitNode: "Exit Node",
+    keyStatus: "Key status",
     executed: "Executed",
     nodes: "Nodes",
     edges: "Edges",
@@ -461,6 +486,14 @@ const defaultDashboard: DashboardSummary = {
   cards: [],
 };
 
+const defaultTailscaleStatus: TailscaleStatus = {
+  readonly: true,
+  token_status: "missing",
+  config_gap: true,
+  source: "missing_status_json",
+  nodes: [],
+};
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem("uninode.language") as Language | null) ?? "zh";
@@ -480,6 +513,7 @@ function App() {
   const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null);
   const [agentTask, setAgentTask] = useState<AgentTask | null>(null);
   const [reportResult, setReportResult] = useState<ReportResult | null>(null);
+  const [tailscaleStatus, setTailscaleStatus] = useState<TailscaleStatus>(defaultTailscaleStatus);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -540,6 +574,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: AutomationJob[]) => setJobs(payload))
       .catch(() => setJobs([]));
+    fetch(`${apiBase}/api/tailscale/status`)
+      .then((response) => response.json())
+      .then((payload: TailscaleStatus) => setTailscaleStatus(payload))
+      .catch(() => setTailscaleStatus(defaultTailscaleStatus));
   }, []);
 
   useEffect(() => {
@@ -850,6 +888,33 @@ function App() {
                   ))}
                 </section>
               </div>
+            </div>
+          )}
+          {activePage === "settings" && (
+            <div className="tailscale-panel" aria-label={t.tailscaleStatus}>
+              <article className={tailscaleStatus.config_gap ? "dashboard-card evidence_gap" : "dashboard-card"}>
+                <span>{t.tailscaleStatus}</span>
+                <strong>
+                  {t.tokenStatus}: {tailscaleStatus.token_status}
+                </strong>
+                <p>
+                  {t.configGap}: {String(tailscaleStatus.config_gap)} · readonly:{" "}
+                  {String(tailscaleStatus.readonly)}
+                </p>
+                <small>{tailscaleStatus.source}</small>
+              </article>
+              {tailscaleStatus.nodes.map((node) => (
+                <article className={`topology-node ${node.state}`} key={node.hostname}>
+                  <strong>{node.hostname}</strong>
+                  <span>{node.state}</span>
+                  <p>
+                    {node.tailscale_ips.join(", ") || "-"} · {t.exitNode}: {String(node.exit_node)}
+                  </p>
+                  <small>
+                    {t.keyStatus}: {node.key_status}
+                  </small>
+                </article>
+              ))}
             </div>
           )}
           {activePage === "services" && (

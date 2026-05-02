@@ -1,0 +1,5 @@
+api_token_env: TAILSCALE_API_TOKEN
+status_json_path: data/evidence/tailscale/status.json
+expected_offline_hosts:
+  - minipc-gateway
+  - epixnas-rpi
