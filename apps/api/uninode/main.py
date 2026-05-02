@@ -12,6 +12,7 @@ from uninode.devices import DEFAULT_DEVICES_CONFIG_PATH, create_devices_router
 from uninode.evidence import create_evidence_router
 from uninode.executor import DEFAULT_EXECUTOR_CONFIG_PATH, create_executor_router
 from uninode.gates import create_gates_router
+from uninode.incidents import create_incidents_router
 from uninode.jobs import DEFAULT_AUTOMATIONS_CONFIG_PATH, create_jobs_router
 from uninode.mihomo import DEFAULT_MIHOMO_CONFIG_PATH, create_mihomo_router
 from uninode.reports import create_reports_router
@@ -71,6 +72,7 @@ def create_app(
     app.include_router(create_tailscale_router(tailscale_config_path))
     app.include_router(create_mihomo_router(mihomo_config_path))
     app.include_router(create_sync_router(sync_config_path))
+    app.include_router(create_incidents_router())
     app.include_router(console_router)
     return app
 

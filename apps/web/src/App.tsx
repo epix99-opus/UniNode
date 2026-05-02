@@ -227,6 +227,19 @@ type SyncStatus = {
   next_action: string;
 };
 
+type Incident = {
+  id: string;
+  title: string;
+  signal: string;
+  status: string;
+  severity: string;
+  classification: string;
+  recommended_automations: string[];
+  rollback_readiness: string;
+  human_actions: string[];
+  blocked: boolean;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -303,6 +316,9 @@ const copy = {
     selectedSync: "已选方案",
     backupMarker: "备份点",
     lastSync: "最近同步",
+    incidentCenter: "事件中心",
+    createIncident: "创建事件",
+    closeIncident: "关闭",
     executed: "已执行",
     nodes: "节点",
     edges: "连接",
@@ -417,6 +433,9 @@ const copy = {
     selectedSync: "Selected sync",
     backupMarker: "Backup marker",
     lastSync: "Last sync",
+    incidentCenter: "Incident Center",
+    createIncident: "Create incident",
+    closeIncident: "Close",
     executed: "Executed",
     nodes: "Nodes",
     edges: "Edges",
@@ -581,6 +600,7 @@ function App() {
   const [tailscaleStatus, setTailscaleStatus] = useState<TailscaleStatus>(defaultTailscaleStatus);
   const [mihomoStatus, setMihomoStatus] = useState<MihomoStatus>(defaultMihomoStatus);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(defaultSyncStatus);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -720,6 +740,26 @@ function App() {
     const response = await fetch(`${apiBase}/api/reports/${reportType}`, { method: "POST" });
     if (response.ok) {
       setReportResult((await response.json()) as ReportResult);
+    }
+  }
+
+  async function createIncident(title: string, signal: string, evidence_statuses: string[] = []) {
+    const response = await fetch(`${apiBase}/api/incidents`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, signal, evidence_statuses }),
+    });
+    if (response.ok) {
+      const incident = (await response.json()) as Incident;
+      setIncidents((current) => [...current, incident]);
+    }
+  }
+
+  async function closeIncident(incidentId: string) {
+    const response = await fetch(`${apiBase}/api/incidents/${incidentId}/close`, { method: "POST" });
+    if (response.ok) {
+      const closed = (await response.json()) as Incident;
+      setIncidents((current) => current.map((incident) => (incident.id === closed.id ? closed : incident)));
     }
   }
 
@@ -1162,6 +1202,41 @@ function App() {
                   <small>redaction: {String(reportResult.redaction_applied)}</small>
                 </article>
               )}
+            </div>
+          )}
+          {activePage === "settings" && (
+            <div className="reports-board" aria-label={t.incidentCenter}>
+              <button
+                type="button"
+                onClick={() => createIncident("Global access slow", "global_access_slow", ["template_only"])}
+              >
+                {t.createIncident}: global_access_slow
+              </button>
+              <button type="button" onClick={() => createIncident("miniPC offline", "device_offline")}>
+                {t.createIncident}: device_offline
+              </button>
+              <button
+                type="button"
+                onClick={() => createIncident("Agent requested router write", "agent_privilege_escalation")}
+              >
+                {t.createIncident}: agent_policy
+              </button>
+              {incidents.map((incident) => (
+                <article className="dry-run-card" key={incident.id}>
+                  <span>{t.incidentCenter}</span>
+                  <strong>
+                    {incident.severity} · {incident.classification}
+                  </strong>
+                  <p>
+                    {incident.title} · {incident.status}
+                  </p>
+                  <small>automations: {incident.recommended_automations.join(", ") || "-"}</small>
+                  <small>human: {incident.human_actions.join(", ") || "-"}</small>
+                  <button type="button" onClick={() => closeIncident(incident.id)}>
+                    {t.closeIncident}
+                  </button>
+                </article>
+              ))}
             </div>
           )}
           <div className="action-row">
