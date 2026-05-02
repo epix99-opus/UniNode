@@ -104,6 +104,26 @@ type SecurityFindings = {
   }>;
 };
 
+type TopologyGraph = {
+  active_layer: string;
+  layers: Array<{ id: string; name: string }>;
+  nodes: Array<{
+    id: string;
+    label: string;
+    type: string;
+    status: string;
+    hint: string | null;
+    layers: string[];
+  }>;
+  edges: Array<{
+    id: string;
+    source: string;
+    target: string;
+    layer: string;
+    label: string;
+  }>;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -157,6 +177,10 @@ const copy = {
     expectedOnline: "预期在线",
     humanAction: "人工动作",
     serviceCatalog: "服务目录",
+    topologyGraph: "拓扑图",
+    nodes: "节点",
+    edges: "连接",
+    layer: "图层",
     endpoint: "端点",
     dependencies: "依赖",
     expectedStatus: "预期状态",
@@ -244,6 +268,10 @@ const copy = {
     expectedOnline: "Expected online",
     humanAction: "Human action",
     serviceCatalog: "Service Catalog",
+    topologyGraph: "Topology Graph",
+    nodes: "Nodes",
+    edges: "Edges",
+    layer: "Layer",
     endpoint: "Endpoint",
     dependencies: "Dependencies",
     expectedStatus: "Expected status",
@@ -340,6 +368,13 @@ const defaultSecurityFindings: SecurityFindings = {
   findings: [],
 };
 
+const defaultTopology: TopologyGraph = {
+  active_layer: "physical",
+  layers: [],
+  nodes: [],
+  edges: [],
+};
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem("uninode.language") as Language | null) ?? "zh";
@@ -352,6 +387,8 @@ function App() {
   const [services, setServices] = useState<Service[]>([]);
   const [evidenceSummary, setEvidenceSummary] = useState<EvidenceSummary>(defaultEvidenceSummary);
   const [securityFindings, setSecurityFindings] = useState<SecurityFindings>(defaultSecurityFindings);
+  const [topologyLayer, setTopologyLayer] = useState("physical");
+  const [topology, setTopology] = useState<TopologyGraph>(defaultTopology);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -405,6 +442,13 @@ function App() {
       .then((payload: SecurityFindings) => setSecurityFindings(payload))
       .catch(() => setSecurityFindings(defaultSecurityFindings));
   }, []);
+
+  useEffect(() => {
+    fetch(`${apiBase}/api/topology?layer=${encodeURIComponent(topologyLayer)}`)
+      .then((response) => response.json())
+      .then((payload: TopologyGraph) => setTopology(payload))
+      .catch(() => setTopology(defaultTopology));
+  }, [topologyLayer]);
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -620,6 +664,51 @@ function App() {
                   </dl>
                 </article>
               ))}
+            </div>
+          )}
+          {activePage === "topology" && (
+            <div className="topology-board" aria-label={t.topologyGraph}>
+              <div className="layer-tabs">
+                {(topology.layers.length > 0 ? topology.layers : [{ id: topologyLayer, name: topologyLayer }]).map(
+                  (layer) => (
+                    <button
+                      className={layer.id === topology.active_layer ? "active" : ""}
+                      key={layer.id}
+                      type="button"
+                      onClick={() => setTopologyLayer(layer.id)}
+                    >
+                      {layer.name}
+                    </button>
+                  ),
+                )}
+              </div>
+              <div className="topology-grid">
+                <section>
+                  <h3>{t.nodes}</h3>
+                  {topology.nodes.map((node) => (
+                    <article className={`topology-node ${node.status}`} key={node.id}>
+                      <strong>{node.label}</strong>
+                      <span>{node.type}</span>
+                      <p>{node.status}</p>
+                      {node.hint && <small>{node.hint}</small>}
+                    </article>
+                  ))}
+                </section>
+                <section>
+                  <h3>{t.edges}</h3>
+                  {topology.edges.map((edge) => (
+                    <article className="topology-edge" key={edge.id}>
+                      <strong>
+                        {edge.source} → {edge.target}
+                      </strong>
+                      <span>
+                        {t.layer}: {edge.layer}
+                      </span>
+                      <p>{edge.label}</p>
+                    </article>
+                  ))}
+                </section>
+              </div>
             </div>
           )}
           {activePage === "services" && (

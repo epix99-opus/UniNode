@@ -1,0 +1,112 @@
+layers:
+  - id: physical
+    name: Physical LAN
+  - id: tailscale
+    name: Tailscale Overlay
+  - id: global_access
+    name: Global Access
+  - id: nas_sync
+    name: NAS / Obsidian Sync
+  - id: agent_collaboration
+    name: Agent Collaboration
+
+nodes:
+  - id: huawei_main_router
+    label: Huawei Q2 Pro
+    type: device
+    device_id: huawei_main_router
+    layers: [physical]
+    status: unknown
+  - id: asus_freesky
+    label: ASUS / FreeSky
+    type: device
+    device_id: asus_freesky
+    layers: [physical, global_access]
+    status: unknown
+  - id: minipc_gateway
+    label: backup-gateway miniPC
+    type: device
+    device_id: minipc_gateway
+    layers: [physical, tailscale, global_access]
+    status: needs_human_power_on
+    hint: power_on_if_check_required
+  - id: epixnas_rpi
+    label: EpixNAS Raspberry Pi
+    type: device
+    device_id: epixnas_rpi
+    layers: [physical, tailscale, nas_sync]
+    status: needs_human_power_on
+    hint: power_on_if_check_required
+  - id: contabo_vps
+    label: Contabo VPS
+    type: device
+    device_id: contabo_vps
+    layers: [global_access, tailscale]
+    status: unknown
+  - id: mobile_clients
+    label: 5G / External Clients
+    type: client_group
+    device_id: mobile_clients
+    layers: [global_access, tailscale]
+    status: needs_human_collection
+    hint: collect_mobile_measurement_when_required
+  - id: obsidian_sync
+    label: Obsidian Sync Placeholder
+    type: service
+    service_id: obsidian_sync_placeholder
+    layers: [nas_sync]
+    status: missing_design_choice
+  - id: openclaw_agent
+    label: OpenClaw Agent Placeholder
+    type: service
+    service_id: openclaw_agent_placeholder
+    layers: [agent_collaboration]
+    status: placeholder
+  - id: hermes_agent
+    label: Hermes Agent Placeholder
+    type: service
+    service_id: hermes_agent_placeholder
+    layers: [agent_collaboration]
+    status: placeholder
+
+edges:
+  - id: huawei_to_asus
+    source: huawei_main_router
+    target: asus_freesky
+    layer: physical
+    label: upstream LAN
+  - id: asus_to_minipc
+    source: asus_freesky
+    target: minipc_gateway
+    layer: physical
+    label: LAN gateway path
+  - id: asus_to_epixnas
+    source: asus_freesky
+    target: epixnas_rpi
+    layer: physical
+    label: LAN storage path
+  - id: minipc_to_contabo
+    source: minipc_gateway
+    target: contabo_vps
+    layer: global_access
+    label: mihomo subscription path
+  - id: mobile_to_tailscale
+    source: mobile_clients
+    target: minipc_gateway
+    layer: tailscale
+    label: Tailscale Exit Node candidate
+  - id: tailscale_to_epixnas
+    source: mobile_clients
+    target: epixnas_rpi
+    layer: tailscale
+    label: NAS Exit Node candidate
+  - id: epixnas_to_obsidian
+    source: epixnas_rpi
+    target: obsidian_sync
+    layer: nas_sync
+    label: sync service placeholder
+  - id: openclaw_to_hermes
+    source: openclaw_agent
+    target: hermes_agent
+    layer: agent_collaboration
+    label: agent handoff placeholder

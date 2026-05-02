@@ -569,6 +569,70 @@ button {
   margin-top: 22px;
 }
 
+.topology-board {
+  margin-top: 22px;
+}
+
+.layer-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.layer-tabs button {
+  padding: 10px 12px;
+}
+
+.layer-tabs button.active {
+  background: #b9ffe2;
+  color: #06211b;
+}
+
+.topology-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.topology-grid section,
+.topology-node,
+.topology-edge {
+  border: 1px solid rgba(185, 255, 226, 0.12);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.topology-grid h3 {
+  margin: 0 0 12px;
+  color: #f7fffb;
+}
+
+.topology-node,
+.topology-edge {
+  margin-bottom: 10px;
+}
+
+.topology-node.needs_human_power_on,
+.topology-node.needs_human_collection {
+  border-color: rgba(255, 195, 113, 0.35);
+}
+
+.topology-node strong,
+.topology-edge strong,
+.topology-node span,
+.topology-edge span,
+.topology-node small {
+  display: block;
+}
+
+.topology-node span,
+.topology-edge span,
+.topology-node small {
+  color: #8aa79e;
+}
+
 .device-card,
 .service-card {
   border: 1px solid rgba(185, 255, 226, 0.12);
@@ -651,6 +715,7 @@ button {
   .status-grid,
   .safety-panel dl,
   .path-row,
+  .topology-grid,
   .device-list,
   .service-list,
   .evidence-summary,
