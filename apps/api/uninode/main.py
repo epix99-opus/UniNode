@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from uninode.auth import create_auth_router
 from uninode.config_status import DEFAULT_CONFIG_PATH, create_config_router
 from uninode.console import router as console_router
+from uninode.dashboard import create_dashboard_router
 from uninode.devices import DEFAULT_DEVICES_CONFIG_PATH, create_devices_router
 from uninode.evidence import create_evidence_router
 from uninode.security import create_security_router
@@ -48,6 +49,7 @@ def create_app(
     app.include_router(create_evidence_router(config_path))
     app.include_router(create_security_router(config_path))
     app.include_router(create_topology_router(topology_config_path))
+    app.include_router(create_dashboard_router(config_path, devices_config_path, services_config_path))
     app.include_router(console_router)
     return app
 

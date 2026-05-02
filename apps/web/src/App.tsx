@@ -124,6 +124,18 @@ type TopologyGraph = {
   }>;
 };
 
+type DashboardSummary = {
+  overall_status: string;
+  human_actions: string[];
+  cards: Array<{
+    id: string;
+    title: string;
+    status: string;
+    count: number;
+    detail: string;
+  }>;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -178,6 +190,8 @@ const copy = {
     humanAction: "人工动作",
     serviceCatalog: "服务目录",
     topologyGraph: "拓扑图",
+    dashboardCards: "Dashboard 状态卡",
+    overallStatus: "整体状态",
     nodes: "节点",
     edges: "连接",
     layer: "图层",
@@ -269,6 +283,8 @@ const copy = {
     humanAction: "Human action",
     serviceCatalog: "Service Catalog",
     topologyGraph: "Topology Graph",
+    dashboardCards: "Dashboard Status Cards",
+    overallStatus: "Overall status",
     nodes: "Nodes",
     edges: "Edges",
     layer: "Layer",
@@ -375,6 +391,12 @@ const defaultTopology: TopologyGraph = {
   edges: [],
 };
 
+const defaultDashboard: DashboardSummary = {
+  overall_status: "unknown",
+  human_actions: [],
+  cards: [],
+};
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem("uninode.language") as Language | null) ?? "zh";
@@ -389,6 +411,7 @@ function App() {
   const [securityFindings, setSecurityFindings] = useState<SecurityFindings>(defaultSecurityFindings);
   const [topologyLayer, setTopologyLayer] = useState("physical");
   const [topology, setTopology] = useState<TopologyGraph>(defaultTopology);
+  const [dashboard, setDashboard] = useState<DashboardSummary>(defaultDashboard);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -441,6 +464,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: SecurityFindings) => setSecurityFindings(payload))
       .catch(() => setSecurityFindings(defaultSecurityFindings));
+    fetch(`${apiBase}/api/dashboard/summary`)
+      .then((response) => response.json())
+      .then((payload: DashboardSummary) => setDashboard(payload))
+      .catch(() => setDashboard(defaultDashboard));
   }, []);
 
   useEffect(() => {
@@ -662,6 +689,23 @@ function App() {
                       </dd>
                     </div>
                   </dl>
+                </article>
+              ))}
+            </div>
+          )}
+          {activePage === "dashboard" && (
+            <div className="dashboard-cards" aria-label={t.dashboardCards}>
+              <article className={`dashboard-card ${dashboard.overall_status}`}>
+                <span>{t.overallStatus}</span>
+                <strong>{dashboard.overall_status}</strong>
+                <p>{dashboard.human_actions.join(" · ") || t.noSecurityFindings}</p>
+              </article>
+              {dashboard.cards.map((card) => (
+                <article className={`dashboard-card ${card.status}`} key={card.id}>
+                  <span>{card.title}</span>
+                  <strong>{card.status}</strong>
+                  <p>{card.detail}</p>
+                  <small>{card.count}</small>
                 </article>
               ))}
             </div>
