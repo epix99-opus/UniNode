@@ -83,6 +83,13 @@ type Service = {
   tags: string[];
 };
 
+type EvidenceSummary = {
+  total: number;
+  blocked_count: number;
+  by_validity: Record<string, number>;
+  by_type: Record<string, number>;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -139,6 +146,11 @@ const copy = {
     endpoint: "端点",
     dependencies: "依赖",
     expectedStatus: "预期状态",
+    evidenceSummary: "证据摘要",
+    totalEvidence: "证据总数",
+    blockedEvidence: "阻塞证据",
+    byValidity: "按有效性",
+    byType: "按类型",
     missingFacts: "缺失事实",
     noMissingFacts: "事实完整",
     lanIp: "LAN IP",
@@ -217,6 +229,11 @@ const copy = {
     endpoint: "Endpoint",
     dependencies: "Dependencies",
     expectedStatus: "Expected status",
+    evidenceSummary: "Evidence Summary",
+    totalEvidence: "Total evidence",
+    blockedEvidence: "Blocked evidence",
+    byValidity: "By validity",
+    byType: "By type",
     missingFacts: "Missing facts",
     noMissingFacts: "Facts complete",
     lanIp: "LAN IP",
@@ -288,6 +305,13 @@ const defaultConfigStatus: ConfigStatus = {
   },
 };
 
+const defaultEvidenceSummary: EvidenceSummary = {
+  total: 0,
+  blocked_count: 0,
+  by_validity: {},
+  by_type: {},
+};
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem("uninode.language") as Language | null) ?? "zh";
@@ -298,6 +322,7 @@ function App() {
   const [configStatus, setConfigStatus] = useState<ConfigStatus>(defaultConfigStatus);
   const [devices, setDevices] = useState<Device[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [evidenceSummary, setEvidenceSummary] = useState<EvidenceSummary>(defaultEvidenceSummary);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -315,10 +340,10 @@ function App() {
     () => [
       { label: t.cards.devices, value: devices.length || summary.counts.devices },
       { label: t.cards.services, value: services.length || summary.counts.services },
-      { label: t.cards.evidence, value: summary.counts.evidence },
+      { label: t.cards.evidence, value: evidenceSummary.total || summary.counts.evidence },
       { label: t.cards.jobs, value: summary.counts.automation_jobs },
     ],
-    [devices.length, services.length, summary, t],
+    [devices.length, evidenceSummary.total, services.length, summary, t],
   );
 
   useEffect(() => {
@@ -342,6 +367,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: Service[]) => setServices(payload))
       .catch(() => setServices([]));
+    fetch(`${apiBase}/api/evidence/summary`)
+      .then((response) => response.json())
+      .then((payload: EvidenceSummary) => setEvidenceSummary(payload))
+      .catch(() => setEvidenceSummary(defaultEvidenceSummary));
   }, []);
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
@@ -591,6 +620,34 @@ function App() {
                   </dl>
                 </article>
               ))}
+            </div>
+          )}
+          {activePage === "evidence" && (
+            <div className="evidence-summary" aria-label={t.evidenceSummary}>
+              <article>
+                <span>{t.totalEvidence}</span>
+                <strong>{evidenceSummary.total}</strong>
+              </article>
+              <article>
+                <span>{t.blockedEvidence}</span>
+                <strong>{evidenceSummary.blocked_count}</strong>
+              </article>
+              <article>
+                <span>{t.byValidity}</span>
+                <p>
+                  {Object.entries(evidenceSummary.by_validity)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join(" · ") || "-"}
+                </p>
+              </article>
+              <article>
+                <span>{t.byType}</span>
+                <p>
+                  {Object.entries(evidenceSummary.by_type)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join(" · ") || "-"}
+                </p>
+              </article>
             </div>
           )}
           <div className="action-row">

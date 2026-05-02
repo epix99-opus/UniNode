@@ -495,6 +495,39 @@ button {
   margin: 0;
 }
 
+.evidence-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.evidence-summary article {
+  border: 1px solid rgba(185, 255, 226, 0.12);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.evidence-summary span {
+  color: #8aa79e;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.evidence-summary strong {
+  display: block;
+  margin-top: 8px;
+  color: #f7fffb;
+  font-size: 2rem;
+}
+
+.evidence-summary p {
+  margin: 8px 0 0;
+}
+
 .device-list,
 .service-list {
   display: grid;
@@ -587,6 +620,7 @@ button {
   .path-row,
   .device-list,
   .service-list,
+  .evidence-summary,
   .device-card dl,
   .service-card dl {
     grid-template-columns: 1fr;
