@@ -495,6 +495,64 @@ button {
   margin: 0;
 }
 
+.device-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.device-card {
+  border: 1px solid rgba(185, 255, 226, 0.12);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.device-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.device-card-header strong {
+  color: #f7fffb;
+}
+
+.device-card-header p {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+}
+
+.device-card-header span {
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: #07100e;
+  background: #ffcf66;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.device-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+}
+
+.device-card dt {
+  color: #8aa79e;
+  font-size: 0.78rem;
+}
+
+.device-card dd {
+  overflow-wrap: anywhere;
+  margin: 4px 0 0;
+  color: #f7fffb;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 760px) {
   .auth-layout,
   .app-shell {
@@ -521,7 +579,9 @@ button {
 
   .status-grid,
   .safety-panel dl,
-  .path-row {
+  .path-row,
+  .device-list,
+  .device-card dl {
     grid-template-columns: 1fr;
   }
 }

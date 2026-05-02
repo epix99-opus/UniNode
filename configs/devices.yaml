@@ -1,0 +1,70 @@
+devices:
+  - id: huawei_main_router
+    name: Huawei Q2 Pro
+    type: router
+    role: office_primary_entry
+    expected_online: true
+    tags: [office, router, physical]
+
+  - id: asus_freesky
+    name: ASUS RT-AC86U / FreeSky
+    type: router
+    role: lan_dhcp_wifi_policy_route
+    ip_lan: 192.168.50.1
+    expected_online: true
+    tags: [office, router, freesky]
+
+  - id: minipc_gateway
+    name: backup-gateway miniPC
+    type: edge_node
+    role: transparent_gateway_tailscale_exit_nas_candidate
+    ip_lan_fact: BACKUP_GW_IP
+    ip_tailscale_fact: TAILSCALE_BACKUP_GW_IP
+    expected_online: false
+    power_state_assumption: may_be_temporarily_powered_off
+    human_action: power_on_if_check_required
+    tags: [gateway, tailscale_exit_node, nas_candidate]
+
+  - id: epixnas_rpi
+    name: EpixNAS Raspberry Pi
+    type: edge_node
+    role: nas_backup_exit_node
+    ip_lan_fact: EPIXNAS_IP
+    ip_tailscale_fact: TAILSCALE_EPIXNAS_IP
+    expected_online: false
+    power_state_assumption: may_be_temporarily_powered_off
+    human_action: power_on_if_check_required
+    tags: [nas, tailscale_exit_node, storage]
+
+  - id: contabo_vps
+    name: Contabo VPS
+    type: vps
+    role: vpn_subscription_public_exit
+    ip_public_fact: VPS_IP
+    expected_online: true
+    tags: [vps, global_access, subscription]
+
+  - id: tencent_cloud
+    name: Tencent Cloud
+    type: cloud
+    role: application_hosting_target
+    expected_online: false
+    power_state_assumption: evidence_not_collected
+    human_action: collect_cloud_asset_facts
+    tags: [cloud, evidence_gap]
+
+  - id: mac_terminal
+    name: Mac / Cursor workstation
+    type: terminal
+    role: operator_console_and_bench_host
+    expected_online: true
+    tags: [terminal, operator]
+
+  - id: mobile_clients
+    name: iPhone / iPad / Android clients
+    type: terminal_group
+    role: mobile_5g_clash_tailscale_clients
+    expected_online: false
+    power_state_assumption: user_operated_on_demand
+    human_action: collect_mobile_measurement_when_required
+    tags: [mobile, evidence_gap]

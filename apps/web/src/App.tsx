@@ -56,6 +56,21 @@ type ConfigStatus = {
   };
 };
 
+type Device = {
+  id: string;
+  name: string;
+  type: string;
+  role: string;
+  ip_lan: string | null;
+  ip_public: string | null;
+  ip_tailscale: string | null;
+  expected_online: boolean;
+  human_action: string | null;
+  status: string;
+  missing_facts: string[];
+  tags: string[];
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -104,6 +119,14 @@ const copy = {
     missing: "缺失",
     errors: "错误",
     warnings: "提示",
+    deviceInventory: "设备事实源",
+    expectedOnline: "预期在线",
+    humanAction: "人工动作",
+    missingFacts: "缺失事实",
+    noMissingFacts: "事实完整",
+    lanIp: "LAN IP",
+    publicIp: "公网 IP",
+    tailscaleIp: "Tailscale IP",
     dryRun: "默认执行模式",
     approval: "生产网络变更需要审批",
     offline: "离线设备策略",
@@ -168,6 +191,14 @@ const copy = {
     missing: "Missing",
     errors: "Errors",
     warnings: "Warnings",
+    deviceInventory: "Device Inventory",
+    expectedOnline: "Expected online",
+    humanAction: "Human action",
+    missingFacts: "Missing facts",
+    noMissingFacts: "Facts complete",
+    lanIp: "LAN IP",
+    publicIp: "Public IP",
+    tailscaleIp: "Tailscale IP",
     dryRun: "Default execution mode",
     approval: "Production network changes require approval",
     offline: "Offline device policy",
@@ -240,6 +271,7 @@ function App() {
   const [activePage, setActivePage] = useState<PageKey>("dashboard");
   const [summary, setSummary] = useState<ConsoleSummary>(defaultSummary);
   const [configStatus, setConfigStatus] = useState<ConfigStatus>(defaultConfigStatus);
+  const [devices, setDevices] = useState<Device[]>([]);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -255,12 +287,12 @@ function App() {
 
   const statCards = useMemo(
     () => [
-      { label: t.cards.devices, value: summary.counts.devices },
+      { label: t.cards.devices, value: devices.length || summary.counts.devices },
       { label: t.cards.services, value: summary.counts.services },
       { label: t.cards.evidence, value: summary.counts.evidence },
       { label: t.cards.jobs, value: summary.counts.automation_jobs },
     ],
-    [summary, t],
+    [devices.length, summary, t],
   );
 
   useEffect(() => {
@@ -276,6 +308,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: ConfigStatus) => setConfigStatus(payload))
       .catch(() => setConfigStatus(defaultConfigStatus));
+    fetch(`${apiBase}/api/devices`)
+      .then((response) => response.json())
+      .then((payload: Device[]) => setDevices(payload))
+      .catch(() => setDevices([]));
   }, []);
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
@@ -449,6 +485,51 @@ function App() {
             <h2>{t.pages[activePage]}</h2>
             <p>{t.pageEmpty}</p>
           </div>
+          {activePage === "devices" && (
+            <div className="device-list" aria-label={t.deviceInventory}>
+              {devices.map((device) => (
+                <article className="device-card" key={device.id}>
+                  <div className="device-card-header">
+                    <div>
+                      <strong>{device.name}</strong>
+                      <p>{device.role}</p>
+                    </div>
+                    <span>{device.status}</span>
+                  </div>
+                  <dl>
+                    <div>
+                      <dt>{t.lanIp}</dt>
+                      <dd>{device.ip_lan ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt>{t.publicIp}</dt>
+                      <dd>{device.ip_public ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt>{t.tailscaleIp}</dt>
+                      <dd>{device.ip_tailscale ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt>{t.expectedOnline}</dt>
+                      <dd>{String(device.expected_online)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t.humanAction}</dt>
+                      <dd>{device.human_action ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt>{t.missingFacts}</dt>
+                      <dd>
+                        {device.missing_facts.length > 0
+                          ? device.missing_facts.join(", ")
+                          : t.noMissingFacts}
+                      </dd>
+                    </div>
+                  </dl>
+                </article>
+              ))}
+            </div>
+          )}
           <div className="action-row">
             <button type="button">{t.actions.importFacts}</button>
             <button type="button">{t.actions.scanEvidence}</button>
