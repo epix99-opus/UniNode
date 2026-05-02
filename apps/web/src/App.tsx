@@ -210,6 +210,23 @@ type MihomoStatus = {
   next_action: string;
 };
 
+type SyncStatus = {
+  readonly: boolean;
+  selected: string;
+  overall_status: string;
+  services: Array<{
+    id: string;
+    endpoint: string;
+    selected: boolean;
+    reachable: boolean;
+    status: string;
+    snapshot_path: string;
+  }>;
+  last_sync_at: string | null;
+  backup_marker_status: string;
+  next_action: string;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -282,6 +299,10 @@ const copy = {
     controllerStatus: "Controller 状态",
     ruleHits: "规则命中",
     collectionTask: "采集任务",
+    syncStatus: "NAS/Obsidian 同步",
+    selectedSync: "已选方案",
+    backupMarker: "备份点",
+    lastSync: "最近同步",
     executed: "已执行",
     nodes: "节点",
     edges: "连接",
@@ -392,6 +413,10 @@ const copy = {
     controllerStatus: "Controller status",
     ruleHits: "Rule hits",
     collectionTask: "Collection task",
+    syncStatus: "NAS/Obsidian Sync",
+    selectedSync: "Selected sync",
+    backupMarker: "Backup marker",
+    lastSync: "Last sync",
     executed: "Executed",
     nodes: "Nodes",
     edges: "Edges",
@@ -524,6 +549,16 @@ const defaultMihomoStatus: MihomoStatus = {
   next_action: "Controller snapshot missing.",
 };
 
+const defaultSyncStatus: SyncStatus = {
+  readonly: true,
+  selected: "none",
+  overall_status: "sync_service_not_selected",
+  services: [],
+  last_sync_at: null,
+  backup_marker_status: "missing",
+  next_action: "Choose a sync service.",
+};
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem("uninode.language") as Language | null) ?? "zh";
@@ -545,6 +580,7 @@ function App() {
   const [reportResult, setReportResult] = useState<ReportResult | null>(null);
   const [tailscaleStatus, setTailscaleStatus] = useState<TailscaleStatus>(defaultTailscaleStatus);
   const [mihomoStatus, setMihomoStatus] = useState<MihomoStatus>(defaultMihomoStatus);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(defaultSyncStatus);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -613,6 +649,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: MihomoStatus) => setMihomoStatus(payload))
       .catch(() => setMihomoStatus(defaultMihomoStatus));
+    fetch(`${apiBase}/api/sync/status`)
+      .then((response) => response.json())
+      .then((payload: SyncStatus) => setSyncStatus(payload))
+      .catch(() => setSyncStatus(defaultSyncStatus));
   }, []);
 
   useEffect(() => {
@@ -966,6 +1006,24 @@ function App() {
                   <strong>{group.name}</strong>
                   <span>{group.type}</span>
                   <p>{group.now || "-"}</p>
+                </article>
+              ))}
+              <article className={syncStatus.overall_status === "healthy" ? "dashboard-card" : "dashboard-card evidence_gap"}>
+                <span>{t.syncStatus}</span>
+                <strong>{syncStatus.overall_status}</strong>
+                <p>
+                  {t.selectedSync}: {syncStatus.selected} · {t.backupMarker}:{" "}
+                  {syncStatus.backup_marker_status}
+                </p>
+                <small>
+                  {t.lastSync}: {syncStatus.last_sync_at ?? "-"} · {syncStatus.next_action}
+                </small>
+              </article>
+              {syncStatus.services.map((service) => (
+                <article className="topology-node" key={service.id}>
+                  <strong>{service.id}</strong>
+                  <span>{service.status}</span>
+                  <p>{service.endpoint}</p>
                 </article>
               ))}
             </div>

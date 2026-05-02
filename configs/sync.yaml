@@ -1,0 +1,12 @@
+selected: null
+services:
+  webdav:
+    endpoint: not_configured
+    health_snapshot_path: data/evidence/sync/webdav-health.json
+  syncthing:
+    endpoint: not_configured
+    health_snapshot_path: data/evidence/sync/syncthing-health.json
+  livesync:
+    endpoint: not_configured
+    health_snapshot_path: data/evidence/sync/livesync-health.json
+backup_marker_path: data/evidence/sync/backup-marker.json
