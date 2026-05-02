@@ -1,0 +1,67 @@
+jobs:
+  - id: check_global_access
+    title: Check global access
+    category: readonly_check
+    mode: dry_run
+    target_devices: [asus_freesky, minipc_gateway, contabo_vps, mobile_clients]
+    precheck:
+      - Confirm this is a dry-run plan only.
+      - Confirm no router, VPS, firewall, DNS, or subscription config will be changed.
+    steps:
+      - Inspect global access evidence and subscription hit files.
+      - Check gateway path facts and Tailscale candidate status.
+      - Produce findings and human actions without running production commands.
+    gates: [no_na_fields, mobile_has_valid_samples, subscription_live_hits_present, device_offline_policy]
+    evidence_required: [bench_json, mobile_compare_json, subscription_hit]
+
+  - id: check_tailscale
+    title: Check Tailscale overlay
+    category: readonly_check
+    mode: dry_run
+    target_devices: [minipc_gateway, epixnas_rpi, mobile_clients]
+    precheck:
+      - Confirm Tailscale checks are readonly or manually collected.
+    steps:
+      - Inspect known Tailscale IP facts.
+      - List missing Exit Node evidence and manual collection needs.
+    gates: [mobile_has_valid_samples, device_offline_policy]
+    evidence_required: [mobile_compare_json]
+
+  - id: check_nas
+    title: Check NAS and Obsidian sync
+    category: diagnostic
+    mode: dry_run
+    target_devices: [epixnas_rpi]
+    precheck:
+      - Confirm NAS may be offline and should not be treated as architecture failure.
+    steps:
+      - Inspect NAS service placeholders.
+      - Produce human power-on action if live evidence is required.
+    gates: [device_offline_policy]
+    evidence_required: []
+
+  - id: check_agents
+    title: Check Agent collaboration
+    category: diagnostic
+    mode: dry_run
+    target_devices: [mac_terminal]
+    precheck:
+      - Confirm agent checks are local and readonly.
+    steps:
+      - Inspect OpenClaw and Hermes placeholders.
+      - Report missing registration without executing agents.
+    gates: [secret_scan_pass]
+    evidence_required: []
+
+  - id: scan_security
+    title: Scan security findings
+    category: readonly_check
+    mode: dry_run
+    target_devices: [mac_terminal]
+    precheck:
+      - Confirm findings will be redacted before display or reporting.
+    steps:
+      - Scan configured source paths for sensitive fields.
+      - Return redacted findings and block publish actions if any are found.
+    gates: [secret_scan_pass]
+    evidence_required: []

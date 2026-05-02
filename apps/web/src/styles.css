@@ -675,6 +675,42 @@ button {
   color: #8aa79e;
 }
 
+.automation-board {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.job-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.job-card,
+.dry-run-card {
+  border: 1px solid rgba(185, 255, 226, 0.12);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.job-card strong,
+.dry-run-card strong {
+  color: #f7fffb;
+}
+
+.job-card small,
+.dry-run-card small,
+.dry-run-card span {
+  display: block;
+  color: #8aa79e;
+}
+
+.job-card button {
+  margin-top: 12px;
+}
+
 .device-card,
 .service-card {
   border: 1px solid rgba(185, 255, 226, 0.12);
@@ -759,6 +795,7 @@ button {
   .path-row,
   .dashboard-cards,
   .topology-grid,
+  .job-list,
   .device-list,
   .service-list,
   .evidence-summary,

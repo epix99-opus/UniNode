@@ -136,6 +136,29 @@ type DashboardSummary = {
   }>;
 };
 
+type AutomationJob = {
+  id: string;
+  title: string;
+  category: string;
+  mode: string;
+  target_devices: string[];
+  precheck: string[];
+  steps: string[];
+  gates: string[];
+  evidence_required: string[];
+};
+
+type DryRunResult = {
+  job_id: string;
+  status: string;
+  executed: boolean;
+  precheck: string[];
+  steps: Array<{ order: number; description: string; command: string }>;
+  gates: string[];
+  evidence_required: string[];
+  human_actions: string[];
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -192,6 +215,10 @@ const copy = {
     topologyGraph: "拓扑图",
     dashboardCards: "Dashboard 状态卡",
     overallStatus: "整体状态",
+    automationJobs: "自动化任务",
+    runDry: "生成 dry-run",
+    dryRunResult: "Dry-run 结果",
+    executed: "已执行",
     nodes: "节点",
     edges: "连接",
     layer: "图层",
@@ -285,6 +312,10 @@ const copy = {
     topologyGraph: "Topology Graph",
     dashboardCards: "Dashboard Status Cards",
     overallStatus: "Overall status",
+    automationJobs: "Automation Jobs",
+    runDry: "Generate dry-run",
+    dryRunResult: "Dry-run result",
+    executed: "Executed",
     nodes: "Nodes",
     edges: "Edges",
     layer: "Layer",
@@ -412,6 +443,8 @@ function App() {
   const [topologyLayer, setTopologyLayer] = useState("physical");
   const [topology, setTopology] = useState<TopologyGraph>(defaultTopology);
   const [dashboard, setDashboard] = useState<DashboardSummary>(defaultDashboard);
+  const [jobs, setJobs] = useState<AutomationJob[]>([]);
+  const [dryRunResult, setDryRunResult] = useState<DryRunResult | null>(null);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -468,6 +501,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: DashboardSummary) => setDashboard(payload))
       .catch(() => setDashboard(defaultDashboard));
+    fetch(`${apiBase}/api/jobs`)
+      .then((response) => response.json())
+      .then((payload: AutomationJob[]) => setJobs(payload))
+      .catch(() => setJobs([]));
   }, []);
 
   useEffect(() => {
@@ -511,6 +548,13 @@ function App() {
     setUser(null);
     localStorage.removeItem("uninode.token");
     localStorage.removeItem("uninode.user");
+  }
+
+  async function runDryJob(jobId: string) {
+    const response = await fetch(`${apiBase}/api/jobs/${jobId}/run-dry`, { method: "POST" });
+    if (response.ok) {
+      setDryRunResult((await response.json()) as DryRunResult);
+    }
   }
 
   if (!token || !user) {
@@ -814,6 +858,42 @@ function App() {
                     .join(" · ") || "-"}
                 </p>
               </article>
+            </div>
+          )}
+          {activePage === "automation" && (
+            <div className="automation-board" aria-label={t.automationJobs}>
+              <div className="job-list">
+                {jobs.map((job) => (
+                  <article className="job-card" key={job.id}>
+                    <div>
+                      <strong>{job.title}</strong>
+                      <p>
+                        {job.category} · {job.mode}
+                      </p>
+                    </div>
+                    <small>gates: {job.gates.join(", ")}</small>
+                    <small>evidence: {job.evidence_required.join(", ") || "-"}</small>
+                    <button type="button" onClick={() => runDryJob(job.id)}>
+                      {t.runDry}
+                    </button>
+                  </article>
+                ))}
+              </div>
+              {dryRunResult && (
+                <article className="dry-run-card">
+                  <span>{t.dryRunResult}</span>
+                  <strong>{dryRunResult.job_id}</strong>
+                  <p>
+                    {dryRunResult.status} · {t.executed}: {String(dryRunResult.executed)}
+                  </p>
+                  <p>{dryRunResult.human_actions.join(" · ") || "-"}</p>
+                  {dryRunResult.steps.map((step) => (
+                    <small key={step.order}>
+                      {step.order}. {step.command}: {step.description}
+                    </small>
+                  ))}
+                </article>
+              )}
             </div>
           )}
           <div className="action-row">
