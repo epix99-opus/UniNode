@@ -12,9 +12,12 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "httpx",
-  "pytest"
+  "pytest",
+  "pytest-timeout"
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+timeout = 10
+timeout_method = "thread"
