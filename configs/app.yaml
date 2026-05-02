@@ -39,6 +39,7 @@ agent_automation:
     enabled: false
 
 security:
+  secrets_policy_path: configs/secrets.policy.yaml
   redact_secrets: true
   block_publish_on_secret_findings: true
   secret_values_allowed_in_reports: false

@@ -90,6 +90,20 @@ type EvidenceSummary = {
   by_type: Record<string, number>;
 };
 
+type SecurityFindings = {
+  blocked: boolean;
+  total: number;
+  findings: Array<{
+    id: string;
+    type: string;
+    label: string;
+    severity: string;
+    source_path: string;
+    line: number;
+    redacted_excerpt: string;
+  }>;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -151,6 +165,10 @@ const copy = {
     blockedEvidence: "阻塞证据",
     byValidity: "按有效性",
     byType: "按类型",
+    securityRisk: "安全风险",
+    securityBlocked: "安全阻塞",
+    noSecurityFindings: "未发现敏感字段",
+    securityFindings: "发现项",
     missingFacts: "缺失事实",
     noMissingFacts: "事实完整",
     lanIp: "LAN IP",
@@ -234,6 +252,10 @@ const copy = {
     blockedEvidence: "Blocked evidence",
     byValidity: "By validity",
     byType: "By type",
+    securityRisk: "Security Risk",
+    securityBlocked: "Security blocked",
+    noSecurityFindings: "No sensitive fields found",
+    securityFindings: "Findings",
     missingFacts: "Missing facts",
     noMissingFacts: "Facts complete",
     lanIp: "LAN IP",
@@ -312,6 +334,12 @@ const defaultEvidenceSummary: EvidenceSummary = {
   by_type: {},
 };
 
+const defaultSecurityFindings: SecurityFindings = {
+  blocked: false,
+  total: 0,
+  findings: [],
+};
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem("uninode.language") as Language | null) ?? "zh";
@@ -323,6 +351,7 @@ function App() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [evidenceSummary, setEvidenceSummary] = useState<EvidenceSummary>(defaultEvidenceSummary);
+  const [securityFindings, setSecurityFindings] = useState<SecurityFindings>(defaultSecurityFindings);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -371,6 +400,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: EvidenceSummary) => setEvidenceSummary(payload))
       .catch(() => setEvidenceSummary(defaultEvidenceSummary));
+    fetch(`${apiBase}/api/security/findings`)
+      .then((response) => response.json())
+      .then((payload: SecurityFindings) => setSecurityFindings(payload))
+      .catch(() => setSecurityFindings(defaultSecurityFindings));
   }, []);
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
@@ -676,6 +709,18 @@ function App() {
           <p>
             {t.nextAction}: {summary.health.next_action}
           </p>
+          <div className={securityFindings.blocked ? "security-card blocked" : "security-card"}>
+            <span>{t.securityRisk}</span>
+            <strong>{securityFindings.blocked ? t.securityBlocked : t.noSecurityFindings}</strong>
+            <p>
+              {t.securityFindings}: {securityFindings.total}
+            </p>
+            {securityFindings.findings.slice(0, 3).map((finding) => (
+              <small key={finding.id}>
+                {finding.label} · {finding.source_path}:{finding.line}
+              </small>
+            ))}
+          </div>
         </section>
 
         <section className="config-panel">

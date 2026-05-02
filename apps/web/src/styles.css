@@ -404,6 +404,39 @@ button {
   font-weight: 800;
 }
 
+.security-card {
+  margin-top: 18px;
+  border: 1px solid rgba(185, 255, 226, 0.12);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.security-card.blocked {
+  border-color: rgba(255, 195, 113, 0.4);
+  background: rgba(255, 195, 113, 0.08);
+}
+
+.security-card span,
+.security-card small {
+  display: block;
+  color: #8aa79e;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.security-card strong {
+  display: block;
+  margin-top: 8px;
+  color: #f7fffb;
+}
+
+.security-card p {
+  margin: 8px 0 10px;
+}
+
 .config-heading {
   display: flex;
   align-items: center;
