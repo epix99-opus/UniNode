@@ -4,11 +4,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from uninode.auth import create_auth_router
+from uninode.config_status import DEFAULT_CONFIG_PATH, create_config_router
 from uninode.console import router as console_router
 from uninode.storage import DEFAULT_DATABASE_PATH, initialize_database
 
 
-def create_app(database_path: Path = DEFAULT_DATABASE_PATH) -> FastAPI:
+def create_app(
+    database_path: Path = DEFAULT_DATABASE_PATH,
+    config_path: Path = DEFAULT_CONFIG_PATH,
+) -> FastAPI:
     initialize_database(database_path)
     app = FastAPI(
         title="UniNode Ops Console API",
@@ -30,6 +34,7 @@ def create_app(database_path: Path = DEFAULT_DATABASE_PATH) -> FastAPI:
         }
 
     app.include_router(create_auth_router(database_path))
+    app.include_router(create_config_router(config_path))
     app.include_router(console_router)
     return app
 

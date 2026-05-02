@@ -35,6 +35,27 @@ type ConsoleSummary = {
   };
 };
 
+type ConfigStatus = {
+  ok: boolean;
+  errors: string[];
+  warnings: string[];
+  paths: Array<{
+    id: string;
+    path: string;
+    required: boolean;
+    status: string;
+    next_action: string;
+  }>;
+  execution: {
+    default_mode: string;
+    require_approval_for_network_changes: boolean;
+  };
+  offline_policy: {
+    default_offline_state: string;
+    treat_expected_offline_as_failure: boolean;
+  };
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -74,6 +95,15 @@ const copy = {
       jobs: "任务",
     },
     safety: "安全边界",
+    configStatus: "配置状态",
+    configOk: "配置可用",
+    configNeedsWork: "配置需处理",
+    required: "必需",
+    optional: "可选",
+    present: "存在",
+    missing: "缺失",
+    errors: "错误",
+    warnings: "提示",
     dryRun: "默认执行模式",
     approval: "生产网络变更需要审批",
     offline: "离线设备策略",
@@ -129,6 +159,15 @@ const copy = {
       jobs: "Jobs",
     },
     safety: "Safety Boundary",
+    configStatus: "Config Status",
+    configOk: "Config ready",
+    configNeedsWork: "Config needs attention",
+    required: "Required",
+    optional: "Optional",
+    present: "Present",
+    missing: "Missing",
+    errors: "Errors",
+    warnings: "Warnings",
     dryRun: "Default execution mode",
     approval: "Production network changes require approval",
     offline: "Offline device policy",
@@ -178,6 +217,21 @@ const defaultSummary: ConsoleSummary = {
   },
 };
 
+const defaultConfigStatus: ConfigStatus = {
+  ok: false,
+  errors: ["CONFIG_ERROR"],
+  warnings: [],
+  paths: [],
+  execution: {
+    default_mode: "dry_run",
+    require_approval_for_network_changes: true,
+  },
+  offline_policy: {
+    default_offline_state: "needs_human_power_on",
+    treat_expected_offline_as_failure: false,
+  },
+};
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem("uninode.language") as Language | null) ?? "zh";
@@ -185,6 +239,7 @@ function App() {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [activePage, setActivePage] = useState<PageKey>("dashboard");
   const [summary, setSummary] = useState<ConsoleSummary>(defaultSummary);
+  const [configStatus, setConfigStatus] = useState<ConfigStatus>(defaultConfigStatus);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -217,6 +272,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: ConsoleSummary) => setSummary(payload))
       .catch(() => setSummary(defaultSummary));
+    fetch(`${apiBase}/api/config/status`)
+      .then((response) => response.json())
+      .then((payload: ConfigStatus) => setConfigStatus(payload))
+      .catch(() => setConfigStatus(defaultConfigStatus));
   }, []);
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
@@ -416,6 +475,46 @@ function App() {
           <p>
             {t.nextAction}: {summary.health.next_action}
           </p>
+        </section>
+
+        <section className="config-panel">
+          <div className="config-heading">
+            <div>
+              <p className="eyebrow">{t.configStatus}</p>
+              <h2>{configStatus.ok ? t.configOk : t.configNeedsWork}</h2>
+            </div>
+            <span className={configStatus.ok ? "config-badge ok" : "config-badge warn"}>
+              {configStatus.ok ? "OK" : "CHECK"}
+            </span>
+          </div>
+          <div className="path-list">
+            {configStatus.paths.map((item) => (
+              <article className="path-row" key={item.id}>
+                <div>
+                  <strong>{item.id}</strong>
+                  <p>{item.path}</p>
+                </div>
+                <span className={item.status === "present" ? "path-present" : "path-missing"}>
+                  {item.status === "present" ? t.present : t.missing}
+                </span>
+                <small>{item.required ? t.required : t.optional}</small>
+              </article>
+            ))}
+          </div>
+          {(configStatus.errors.length > 0 || configStatus.warnings.length > 0) && (
+            <div className="config-messages">
+              {configStatus.errors.length > 0 && (
+                <p>
+                  {t.errors}: {configStatus.errors.join(", ")}
+                </p>
+              )}
+              {configStatus.warnings.length > 0 && (
+                <p>
+                  {t.warnings}: {configStatus.warnings.join(", ")}
+                </p>
+              )}
+            </div>
+          )}
         </section>
       </main>
     </div>

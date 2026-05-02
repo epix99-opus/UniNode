@@ -45,6 +45,7 @@ button {
 .status-card,
 .work-panel,
 .safety-panel,
+.config-panel,
 .topbar {
   border: 1px solid rgba(185, 255, 226, 0.16);
   background: rgba(9, 22, 20, 0.78);
@@ -358,13 +359,15 @@ button {
 }
 
 .work-panel,
-.safety-panel {
+.safety-panel,
+.config-panel {
   border-radius: 28px;
   padding: 28px;
 }
 
 .work-panel p,
-.safety-panel p {
+.safety-panel p,
+.config-panel p {
   color: #b9d4ca;
   line-height: 1.7;
 }
@@ -401,6 +404,97 @@ button {
   font-weight: 800;
 }
 
+.config-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.config-heading h2 {
+  margin: 10px 0 0;
+  color: #f7fffb;
+}
+
+.config-badge {
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.config-badge.ok {
+  color: #092015;
+  background: #80ffc4;
+}
+
+.config-badge.warn {
+  color: #231603;
+  background: #ffcf66;
+}
+
+.path-list {
+  display: grid;
+  gap: 10px;
+}
+
+.path-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid rgba(185, 255, 226, 0.12);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.path-row strong {
+  color: #f7fffb;
+}
+
+.path-row p {
+  overflow: hidden;
+  margin: 5px 0 0;
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.path-row span,
+.path-row small {
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-weight: 800;
+}
+
+.path-present {
+  color: #092015;
+  background: #80ffc4;
+}
+
+.path-missing {
+  color: #2b1506;
+  background: #ffad75;
+}
+
+.path-row small {
+  color: #d6efe5;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.config-messages {
+  margin-top: 16px;
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 207, 102, 0.08);
+}
+
+.config-messages p {
+  margin: 0;
+}
+
 @media (max-width: 760px) {
   .auth-layout,
   .app-shell {
@@ -426,7 +520,8 @@ button {
   }
 
   .status-grid,
-  .safety-panel dl {
+  .safety-panel dl,
+  .path-row {
     grid-template-columns: 1fr;
   }
 }
