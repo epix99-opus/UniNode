@@ -278,6 +278,23 @@ type ScheduleTickResult = {
   next_action: string;
 };
 
+type ApprovalPolicy = {
+  roles: Record<string, { allowed_actions: string[] }>;
+  approval_required_actions: string[];
+  key_store: Record<string, string | boolean>;
+};
+
+type ApprovalRequest = {
+  id: string;
+  role: string;
+  action: string;
+  target: string;
+  status: string;
+  requires_approval: boolean;
+  reason: string;
+  created_at: string;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -358,6 +375,8 @@ const copy = {
     agentRegistry: "Agent 注册表",
     scheduler: "持续调度",
     tickDry: "Dry-run tick",
+    approvals: "权限与审批",
+    requestApproval: "请求审批",
     capabilities: "能力",
     handoffModes: "交接模式",
     createIncident: "创建事件",
@@ -480,6 +499,8 @@ const copy = {
     agentRegistry: "Agent Registry",
     scheduler: "Scheduler",
     tickDry: "Dry-run tick",
+    approvals: "Policy & Approvals",
+    requestApproval: "Request approval",
     capabilities: "Capabilities",
     handoffModes: "Handoff modes",
     createIncident: "Create incident",
@@ -631,6 +652,12 @@ const defaultScheduler: SchedulerConfig = {
   notification_hook: "local_report_only",
 };
 
+const defaultApprovalPolicy: ApprovalPolicy = {
+  roles: {},
+  approval_required_actions: [],
+  key_store: { provider: "local_file_reference", secret_material_allowed_in_api: false },
+};
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem("uninode.language") as Language | null) ?? "zh";
@@ -657,6 +684,8 @@ function App() {
   const [agentRegistry, setAgentRegistry] = useState<AgentRegistry | null>(null);
   const [scheduler, setScheduler] = useState<SchedulerConfig>(defaultScheduler);
   const [scheduleTick, setScheduleTick] = useState<ScheduleTickResult | null>(null);
+  const [approvalPolicy, setApprovalPolicy] = useState<ApprovalPolicy>(defaultApprovalPolicy);
+  const [approvalRequest, setApprovalRequest] = useState<ApprovalRequest | null>(null);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -737,6 +766,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: SchedulerConfig) => setScheduler(payload))
       .catch(() => setScheduler(defaultScheduler));
+    fetch(`${apiBase}/api/approvals/policy`)
+      .then((response) => response.json())
+      .then((payload: ApprovalPolicy) => setApprovalPolicy(payload))
+      .catch(() => setApprovalPolicy(defaultApprovalPolicy));
   }, []);
 
   useEffect(() => {
@@ -815,6 +848,17 @@ function App() {
     });
     if (response.ok) {
       setScheduleTick((await response.json()) as ScheduleTickResult);
+    }
+  }
+
+  async function requestApproval(role = "operator", action = "request_config_change", target = "mihomo_update") {
+    const response = await fetch(`${apiBase}/api/approvals/requests`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role, action, target }),
+    });
+    if (response.ok) {
+      setApprovalRequest((await response.json()) as ApprovalRequest);
     }
   }
 
@@ -1312,6 +1356,50 @@ function App() {
                   </button>
                 </article>
               ))}
+            </div>
+          )}
+          {activePage === "settings" && (
+            <div className="reports-board" aria-label={t.approvals}>
+              <article className="dry-run-card">
+                <span>{t.approvals}</span>
+                <strong>
+                  key store: {String(approvalPolicy.key_store.provider ?? "local_file_reference")}
+                </strong>
+                <small>
+                  secret material in API:{" "}
+                  {String(approvalPolicy.key_store.secret_material_allowed_in_api)}
+                </small>
+                <small>approval required: {approvalPolicy.approval_required_actions.join(", ")}</small>
+              </article>
+              {Object.entries(approvalPolicy.roles).map(([role, policy]) => (
+                <article className="job-card" key={role}>
+                  <strong>{role}</strong>
+                  <p>{policy.allowed_actions.join(", ")}</p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      requestApproval(role, "request_config_change", `${role}_config_change`)
+                    }
+                  >
+                    {t.requestApproval}
+                  </button>
+                </article>
+              ))}
+              {approvalRequest && (
+                <article className="dry-run-card">
+                  <span>{t.requestApproval}</span>
+                  <strong>
+                    {approvalRequest.role} · {approvalRequest.status}
+                  </strong>
+                  <p>
+                    {approvalRequest.action} · {approvalRequest.target}
+                  </p>
+                  <small>
+                    requires approval: {String(approvalRequest.requires_approval)} ·{" "}
+                    {approvalRequest.reason}
+                  </small>
+                </article>
+              )}
             </div>
           )}
           {activePage === "automation" && agentRegistry && (

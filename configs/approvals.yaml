@@ -1,0 +1,12 @@
+audit_log_path: data/audit/approvals.jsonl
+key_store:
+  provider: local_file_reference
+  secret_material_allowed_in_api: false
+roles:
+  readonly_operator:
+    allowed_actions: [read_status, generate_report]
+  operator:
+    allowed_actions: [read_status, generate_report, request_config_change]
+  agent:
+    allowed_actions: [read_status, generate_report]
+approval_required_actions: [request_config_change, execute_config_change]
