@@ -1,0 +1,72 @@
+services:
+  - id: contabo_vless
+    name: Contabo VLESS Reality
+    device_id: contabo_vps
+    type: vpn_subscription
+    endpoint: vps:2053
+    expected_status: configured
+    dependencies: []
+    tags: [global_access, subscription]
+
+  - id: contabo_hy2
+    name: Contabo HY2
+    device_id: contabo_vps
+    type: vpn_subscription
+    endpoint: vps:8443
+    expected_status: configured
+    dependencies: []
+    tags: [global_access, subscription]
+
+  - id: minipc_mihomo
+    name: miniPC mihomo transparent gateway
+    device_id: minipc_gateway
+    type: transparent_gateway
+    endpoint: 192.168.50.228:7890
+    expected_status: expected_offline_until_powered
+    dependencies: [contabo_vless, contabo_hy2]
+    tags: [gateway, mihomo, dry_run_only]
+
+  - id: minipc_tailscale_exit
+    name: miniPC Tailscale Exit Node
+    device_id: minipc_gateway
+    type: tailscale
+    endpoint: missing_tailscale_ip
+    expected_status: missing_fact
+    dependencies: []
+    tags: [tailscale, exit_node, evidence_gap]
+
+  - id: epixnas_nas
+    name: EpixNAS NAS placeholder
+    device_id: epixnas_rpi
+    type: nas
+    endpoint: 192.168.50.2
+    expected_status: expected_offline_until_powered
+    dependencies: []
+    tags: [nas, placeholder]
+
+  - id: obsidian_sync_placeholder
+    name: Obsidian sync service placeholder
+    device_id: epixnas_rpi
+    type: obsidian_sync
+    endpoint: sync_service_not_selected
+    expected_status: missing_design_choice
+    dependencies: [epixnas_nas]
+    tags: [obsidian, evidence_gap]
+
+  - id: openclaw_agent_placeholder
+    name: OpenClaw Agent placeholder
+    device_id: mac_terminal
+    type: agent_node
+    endpoint: not_registered
+    expected_status: placeholder
+    dependencies: []
+    tags: [agent, openclaw]
+
+  - id: hermes_agent_placeholder
+    name: Hermes Agent placeholder
+    device_id: mac_terminal
+    type: agent_node
+    endpoint: not_registered
+    expected_status: placeholder
+    dependencies: []
+    tags: [agent, hermes]

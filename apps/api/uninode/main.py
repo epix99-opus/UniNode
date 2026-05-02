@@ -7,6 +7,7 @@ from uninode.auth import create_auth_router
 from uninode.config_status import DEFAULT_CONFIG_PATH, create_config_router
 from uninode.console import router as console_router
 from uninode.devices import DEFAULT_DEVICES_CONFIG_PATH, create_devices_router
+from uninode.services import DEFAULT_SERVICES_CONFIG_PATH, create_services_router
 from uninode.storage import DEFAULT_DATABASE_PATH, initialize_database
 
 
@@ -14,6 +15,7 @@ def create_app(
     database_path: Path = DEFAULT_DATABASE_PATH,
     config_path: Path = DEFAULT_CONFIG_PATH,
     devices_config_path: Path = DEFAULT_DEVICES_CONFIG_PATH,
+    services_config_path: Path = DEFAULT_SERVICES_CONFIG_PATH,
 ) -> FastAPI:
     initialize_database(database_path)
     app = FastAPI(
@@ -38,6 +40,7 @@ def create_app(
     app.include_router(create_auth_router(database_path))
     app.include_router(create_config_router(config_path))
     app.include_router(create_devices_router(config_path, devices_config_path))
+    app.include_router(create_services_router(services_config_path))
     app.include_router(console_router)
     return app
 

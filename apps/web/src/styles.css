@@ -495,14 +495,16 @@ button {
   margin: 0;
 }
 
-.device-list {
+.device-list,
+.service-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 22px;
 }
 
-.device-card {
+.device-card,
+.service-card {
   border: 1px solid rgba(185, 255, 226, 0.12);
   border-radius: 20px;
   padding: 16px;
@@ -534,19 +536,22 @@ button {
   font-weight: 900;
 }
 
-.device-card dl {
+.device-card dl,
+.service-card dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin: 16px 0 0;
 }
 
-.device-card dt {
+.device-card dt,
+.service-card dt {
   color: #8aa79e;
   font-size: 0.78rem;
 }
 
-.device-card dd {
+.device-card dd,
+.service-card dd {
   overflow-wrap: anywhere;
   margin: 4px 0 0;
   color: #f7fffb;
@@ -581,7 +586,9 @@ button {
   .safety-panel dl,
   .path-row,
   .device-list,
-  .device-card dl {
+  .service-list,
+  .device-card dl,
+  .service-card dl {
     grid-template-columns: 1fr;
   }
 }

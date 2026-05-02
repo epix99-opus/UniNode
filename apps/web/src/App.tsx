@@ -6,6 +6,7 @@ type PageKey =
   | "dashboard"
   | "topology"
   | "devices"
+  | "services"
   | "evidence"
   | "automation"
   | "reports"
@@ -71,6 +72,17 @@ type Device = {
   tags: string[];
 };
 
+type Service = {
+  id: string;
+  name: string;
+  device_id: string;
+  type: string;
+  endpoint: string;
+  expected_status: string;
+  dependencies: string[];
+  tags: string[];
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -93,6 +105,7 @@ const copy = {
       dashboard: "总览",
       topology: "拓扑",
       devices: "设备",
+      services: "服务",
       evidence: "证据",
       automation: "自动化",
       reports: "报告",
@@ -122,6 +135,10 @@ const copy = {
     deviceInventory: "设备事实源",
     expectedOnline: "预期在线",
     humanAction: "人工动作",
+    serviceCatalog: "服务目录",
+    endpoint: "端点",
+    dependencies: "依赖",
+    expectedStatus: "预期状态",
     missingFacts: "缺失事实",
     noMissingFacts: "事实完整",
     lanIp: "LAN IP",
@@ -140,6 +157,7 @@ const copy = {
       dashboard: "查看全局健康、证据缺口和人工动作。",
       topology: "切换物理拓扑、Tailscale、全球访问、NAS/Agent 层。",
       devices: "管理 Huawei、ASUS、miniPC、EpixNAS、VPS、腾讯云和终端设备。",
+      services: "查看 VPN 订阅、旁路由、Tailscale、NAS、Obsidian 和 Agent 服务。",
       evidence: "识别 valid、invalid、template_only、missing、stale 和 requires_human_collection。",
       automation: "生成只读检查、诊断、报告任务，配置动作必须审批。",
       reports: "生成当前态报告、证据缺口报告、安全报告和 Agent 上下文。",
@@ -165,6 +183,7 @@ const copy = {
       dashboard: "Dashboard",
       topology: "Topology",
       devices: "Devices",
+      services: "Services",
       evidence: "Evidence",
       automation: "Automation",
       reports: "Reports",
@@ -194,6 +213,10 @@ const copy = {
     deviceInventory: "Device Inventory",
     expectedOnline: "Expected online",
     humanAction: "Human action",
+    serviceCatalog: "Service Catalog",
+    endpoint: "Endpoint",
+    dependencies: "Dependencies",
+    expectedStatus: "Expected status",
     missingFacts: "Missing facts",
     noMissingFacts: "Facts complete",
     lanIp: "LAN IP",
@@ -212,6 +235,7 @@ const copy = {
       dashboard: "Review global health, evidence gaps, and human actions.",
       topology: "Switch between physical topology, Tailscale, global access, NAS, and Agent layers.",
       devices: "Manage Huawei, ASUS, miniPC, EpixNAS, VPS, Tencent Cloud, and terminal devices.",
+      services: "Review VPN subscriptions, gateway, Tailscale, NAS, Obsidian, and Agent services.",
       evidence: "Classify valid, invalid, template_only, missing, stale, and requires_human_collection.",
       automation: "Generate readonly checks, diagnostics, and report tasks. Config actions need approval.",
       reports: "Generate current status, evidence gap, security, and Agent context reports.",
@@ -224,6 +248,7 @@ const pageKeys: PageKey[] = [
   "dashboard",
   "topology",
   "devices",
+  "services",
   "evidence",
   "automation",
   "reports",
@@ -272,6 +297,7 @@ function App() {
   const [summary, setSummary] = useState<ConsoleSummary>(defaultSummary);
   const [configStatus, setConfigStatus] = useState<ConfigStatus>(defaultConfigStatus);
   const [devices, setDevices] = useState<Device[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -288,11 +314,11 @@ function App() {
   const statCards = useMemo(
     () => [
       { label: t.cards.devices, value: devices.length || summary.counts.devices },
-      { label: t.cards.services, value: summary.counts.services },
+      { label: t.cards.services, value: services.length || summary.counts.services },
       { label: t.cards.evidence, value: summary.counts.evidence },
       { label: t.cards.jobs, value: summary.counts.automation_jobs },
     ],
-    [devices.length, summary, t],
+    [devices.length, services.length, summary, t],
   );
 
   useEffect(() => {
@@ -312,6 +338,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: Device[]) => setDevices(payload))
       .catch(() => setDevices([]));
+    fetch(`${apiBase}/api/services`)
+      .then((response) => response.json())
+      .then((payload: Service[]) => setServices(payload))
+      .catch(() => setServices([]));
   }, []);
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
@@ -524,6 +554,39 @@ function App() {
                           ? device.missing_facts.join(", ")
                           : t.noMissingFacts}
                       </dd>
+                    </div>
+                  </dl>
+                </article>
+              ))}
+            </div>
+          )}
+          {activePage === "services" && (
+            <div className="service-list" aria-label={t.serviceCatalog}>
+              {services.map((service) => (
+                <article className="service-card" key={service.id}>
+                  <div className="device-card-header">
+                    <div>
+                      <strong>{service.name}</strong>
+                      <p>{service.type}</p>
+                    </div>
+                    <span>{service.expected_status}</span>
+                  </div>
+                  <dl>
+                    <div>
+                      <dt>Device</dt>
+                      <dd>{service.device_id}</dd>
+                    </div>
+                    <div>
+                      <dt>{t.endpoint}</dt>
+                      <dd>{service.endpoint}</dd>
+                    </div>
+                    <div>
+                      <dt>{t.dependencies}</dt>
+                      <dd>{service.dependencies.length > 0 ? service.dependencies.join(", ") : "-"}</dd>
+                    </div>
+                    <div>
+                      <dt>{t.expectedStatus}</dt>
+                      <dd>{service.expected_status}</dd>
                     </div>
                   </dl>
                 </article>
