@@ -295,6 +295,38 @@ type ApprovalRequest = {
   created_at: string;
 };
 
+type ReleasePipeline = {
+  versions: Array<{
+    id: string;
+    target: string;
+    current_dir: string;
+    proposed_dir: string;
+    rollback_target: string;
+    required_preflight: string[];
+  }>;
+};
+
+type ReleaseDiff = {
+  release_id: string;
+  changed_files: string[];
+  diff: string;
+};
+
+type PreflightResult = {
+  release_id: string;
+  status: string;
+  missing_checks: string[];
+  required_checks: string[];
+};
+
+type DryRunReleaseAction = {
+  release_id: string;
+  action: string;
+  executed: boolean;
+  rollback_target: string;
+  next_action: string;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 const copy = {
@@ -377,6 +409,9 @@ const copy = {
     tickDry: "Dry-run tick",
     approvals: "权限与审批",
     requestApproval: "请求审批",
+    releasePipeline: "配置发布流水线",
+    preflight: "发布前检查",
+    rollbackDry: "回滚 dry-run",
     capabilities: "能力",
     handoffModes: "交接模式",
     createIncident: "创建事件",
@@ -501,6 +536,9 @@ const copy = {
     tickDry: "Dry-run tick",
     approvals: "Policy & Approvals",
     requestApproval: "Request approval",
+    releasePipeline: "Config Release Pipeline",
+    preflight: "Preflight",
+    rollbackDry: "Rollback dry-run",
     capabilities: "Capabilities",
     handoffModes: "Handoff modes",
     createIncident: "Create incident",
@@ -658,6 +696,10 @@ const defaultApprovalPolicy: ApprovalPolicy = {
   key_store: { provider: "local_file_reference", secret_material_allowed_in_api: false },
 };
 
+const defaultReleasePipeline: ReleasePipeline = {
+  versions: [],
+};
+
 function App() {
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem("uninode.language") as Language | null) ?? "zh";
@@ -686,6 +728,10 @@ function App() {
   const [scheduleTick, setScheduleTick] = useState<ScheduleTickResult | null>(null);
   const [approvalPolicy, setApprovalPolicy] = useState<ApprovalPolicy>(defaultApprovalPolicy);
   const [approvalRequest, setApprovalRequest] = useState<ApprovalRequest | null>(null);
+  const [releasePipeline, setReleasePipeline] = useState<ReleasePipeline>(defaultReleasePipeline);
+  const [releaseDiff, setReleaseDiff] = useState<ReleaseDiff | null>(null);
+  const [preflightResult, setPreflightResult] = useState<PreflightResult | null>(null);
+  const [releaseAction, setReleaseAction] = useState<DryRunReleaseAction | null>(null);
   const [token, setToken] = useState(() => localStorage.getItem("uninode.token") ?? "");
   const [user, setUser] = useState<User | null>(() => {
     const rawUser = localStorage.getItem("uninode.user");
@@ -770,6 +816,10 @@ function App() {
       .then((response) => response.json())
       .then((payload: ApprovalPolicy) => setApprovalPolicy(payload))
       .catch(() => setApprovalPolicy(defaultApprovalPolicy));
+    fetch(`${apiBase}/api/releases`)
+      .then((response) => response.json())
+      .then((payload: ReleasePipeline) => setReleasePipeline(payload))
+      .catch(() => setReleasePipeline(defaultReleasePipeline));
   }, []);
 
   useEffect(() => {
@@ -859,6 +909,31 @@ function App() {
     });
     if (response.ok) {
       setApprovalRequest((await response.json()) as ApprovalRequest);
+    }
+  }
+
+  async function showReleaseDiff(releaseId: string) {
+    const response = await fetch(`${apiBase}/api/releases/${releaseId}/diff`, { method: "POST" });
+    if (response.ok) {
+      setReleaseDiff((await response.json()) as ReleaseDiff);
+    }
+  }
+
+  async function runReleasePreflight(releaseId: string) {
+    const response = await fetch(`${apiBase}/api/releases/${releaseId}/preflight`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ checks: { secret_scan: true, rule_coverage: true, live_hit_evidence: true } }),
+    });
+    if (response.ok) {
+      setPreflightResult((await response.json()) as PreflightResult);
+    }
+  }
+
+  async function runReleaseAction(releaseId: string, action: "publish-dry" | "rollback-dry") {
+    const response = await fetch(`${apiBase}/api/releases/${releaseId}/${action}`, { method: "POST" });
+    if (response.ok) {
+      setReleaseAction((await response.json()) as DryRunReleaseAction);
     }
   }
 
@@ -1319,6 +1394,62 @@ function App() {
                   <strong>{reportResult.report_type}</strong>
                   <p>{reportResult.path}</p>
                   <small>redaction: {String(reportResult.redaction_applied)}</small>
+                </article>
+              )}
+            </div>
+          )}
+          {activePage === "reports" && (
+            <div className="reports-board" aria-label={t.releasePipeline}>
+              <article className="dry-run-card">
+                <span>{t.releasePipeline}</span>
+                <strong>{releasePipeline.versions.length} versions</strong>
+                <small>publish mode: dry-run only</small>
+              </article>
+              {releasePipeline.versions.map((release) => (
+                <article className="job-card" key={release.id}>
+                  <strong>
+                    {release.id} · {release.target}
+                  </strong>
+                  <p>rollback: {release.rollback_target}</p>
+                  <small>required: {release.required_preflight.join(", ")}</small>
+                  <button type="button" onClick={() => showReleaseDiff(release.id)}>
+                    diff
+                  </button>
+                  <button type="button" onClick={() => runReleasePreflight(release.id)}>
+                    {t.preflight}
+                  </button>
+                  <button type="button" onClick={() => runReleaseAction(release.id, "publish-dry")}>
+                    publish dry-run
+                  </button>
+                  <button type="button" onClick={() => runReleaseAction(release.id, "rollback-dry")}>
+                    {t.rollbackDry}
+                  </button>
+                </article>
+              ))}
+              {releaseDiff && (
+                <article className="dry-run-card">
+                  <span>diff</span>
+                  <strong>{releaseDiff.release_id}</strong>
+                  <p>{releaseDiff.changed_files.join(", ") || "no changes"}</p>
+                </article>
+              )}
+              {preflightResult && (
+                <article className="dry-run-card">
+                  <span>{t.preflight}</span>
+                  <strong>
+                    {preflightResult.release_id} · {preflightResult.status}
+                  </strong>
+                  <small>missing: {preflightResult.missing_checks.join(", ") || "-"}</small>
+                </article>
+              )}
+              {releaseAction && (
+                <article className="dry-run-card">
+                  <span>{releaseAction.action}</span>
+                  <strong>
+                    {releaseAction.release_id} · executed: {String(releaseAction.executed)}
+                  </strong>
+                  <small>rollback: {releaseAction.rollback_target}</small>
+                  <small>{releaseAction.next_action}</small>
                 </article>
               )}
             </div>

@@ -1,0 +1,13 @@
+versions:
+  - id: mihomo_rules_v1
+    target: mihomo
+    current_dir: configs/release/current/mihomo
+    proposed_dir: configs/release/proposed/mihomo
+    rollback_target: mihomo_rules_previous
+    required_preflight: [secret_scan, rule_coverage, live_hit_evidence]
+  - id: tailscale_routes_v1
+    target: tailscale
+    current_dir: configs/release/current/tailscale
+    proposed_dir: configs/release/proposed/tailscale
+    rollback_target: tailscale_routes_previous
+    required_preflight: [secret_scan, rule_coverage, live_hit_evidence]
